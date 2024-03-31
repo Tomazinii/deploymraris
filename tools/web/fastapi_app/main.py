@@ -18,6 +18,8 @@ origins = [
     "http://localhost",
     "http://localhost:3001",
     "https://localhost:3001",
+    "http://localhost:3000",
+    "https://localhost:3000",
     "http://localhost:80",
     "http://192.168.15.3:80",
     "https://192.168.15.3:80",
@@ -33,7 +35,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origins],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
