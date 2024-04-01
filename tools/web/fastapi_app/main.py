@@ -12,7 +12,7 @@ app = FastAPI()
 
 
 
-origins = [
+origins_test = [
     "http://localhost",
     "https://localhost.tiangolo.com",
     "http://localhost",
@@ -33,9 +33,16 @@ origins = [
     "https://nginx:80",
 ]
 
+origins = [
+    "http://localhost",
+    "https://localhost.tiangolo.com",
+    "http://200.137.197.240",
+    "https://200.137.197.240",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[origins],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
