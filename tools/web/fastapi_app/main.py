@@ -38,6 +38,7 @@ origins = [
     "https://localhost.tiangolo.com",
     "http://200.137.197.240",
     "https://200.137.197.240",
+    "https://mraristotle.site",
 ]
 
 app.add_middleware(
