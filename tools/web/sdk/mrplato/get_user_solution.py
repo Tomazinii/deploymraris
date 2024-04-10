@@ -10,6 +10,6 @@ def get_solution_service(prover_instance):
     
     solutions = []
     for line in prover_instance.proof_lines:
-        solutions.append(f"content: {str(line[0])} methods_used_info: {str(line[1])}")
+        solutions.append(f"{str(line[0])} {str(line[1])}")
 
     return solutions

@@ -1,22 +1,22 @@
 {
   "files": {
-    "main.css": "/static/css/main.f77a29a4.css",
-    "main.js": "/static/js/main.3eb2eea8.js",
+    "main.css": "/static/css/main.d77408c7.css",
+    "main.js": "/static/js/main.a03b8e75.js",
     "static/media/Roboto-Medium.ttf": "/static/media/Roboto-Medium.7c8d04cd831df3033c8a.ttf",
     "static/media/expired.jpg": "/static/media/expired.ed5718044908f9331eaf.jpg",
-    "static/media/content.png": "/static/media/content.8d5eaf2495f6d9305c87.png",
-    "static/media/practitioner.png": "/static/media/practitioner.c5b9f418a5f949fb359a.png",
+    "static/media/content.png": "/static/media/content.5bd912e5211a7c4958c3.png",
+    "static/media/tournament.png": "/static/media/tournament.48c48e10cfa244ace5bb.png",
+    "static/media/games.png": "/static/media/games.76ef19118e5e5a1b81b1.png",
+    "static/media/practitioner.png": "/static/media/practitioner.e4604c9611689015fef3.png",
+    "static/media/exercises.png": "/static/media/exercises.6253da98cb448938cd94.png",
+    "static/media/challenge.png": "/static/media/challenge.4edc600a103b0b40fbf2.png",
     "static/media/landing2.jpg": "/static/media/landing2.9c3e1633ae68061229e3.jpg",
-    "static/media/exercises.png": "/static/media/exercises.c1068c27ad15a4fccb2e.png",
-    "static/media/challenge.png": "/static/media/challenge.d98529adef830400fbab.png",
-    "static/media/games.png": "/static/media/games.b01d6a3ecbdd07f26b45.png",
-    "static/media/tournament.png": "/static/media/tournament.b63750769aaa23d3302b.png",
     "index.html": "/index.html",
-    "main.f77a29a4.css.map": "/static/css/main.f77a29a4.css.map",
-    "main.3eb2eea8.js.map": "/static/js/main.3eb2eea8.js.map"
+    "main.d77408c7.css.map": "/static/css/main.d77408c7.css.map",
+    "main.a03b8e75.js.map": "/static/js/main.a03b8e75.js.map"
   },
   "entrypoints": [
-    "static/css/main.f77a29a4.css",
-    "static/js/main.3eb2eea8.js"
+    "static/css/main.d77408c7.css",
+    "static/js/main.a03b8e75.js"
   ]
 }

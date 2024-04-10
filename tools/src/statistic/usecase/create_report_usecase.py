@@ -1,6 +1,6 @@
 
 
-from src._shared.services.csv_service_interface import CsvServiceInterface
+import datetime
 from src._shared.usecase.usecase_interface import UsecaseInterface
 from src.statistic.repository.statistic_repository_interface import ResultActivityRepositoryInterface
 
@@ -17,7 +17,7 @@ class CreateReportUsecase(UsecaseInterface):
         results = self.repository.get_by_classroom(classroom_id=classroom_id)
 
         # Caminho do arquivo CSV
-        file_path = f"../reports/reports-{uuid4()}.csv"
+        file_path = f"../reports/reports-{datetime.datetime.now()}-{uuid4()}.csv"
 
         # Escrevendo os dados no arquivo CSV
         with open(file_path, mode='w', newline='', encoding='utf-8') as arquivo_csv:
