@@ -14,7 +14,7 @@ def create_user():
             user_model = UserModel(
                 id = str(uuid4()),
                 username = "cedric",
-                email = "cedric@inf.ufg.br",
+                email = "cedric@ufg.br",
                 created_at = datetime.datetime.now(),
                 updated_at = datetime.datetime.now(),
                 password = password,

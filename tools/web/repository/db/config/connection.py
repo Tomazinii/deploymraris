@@ -10,7 +10,7 @@ class DBConnectionHandler:
         self.__connection_string = "{}://{}:{}@{}:{}/{}".format(
             'postgresql+psycopg2',
             'postgres',
-            'postgres',
+            'HySjxzjjZL8cC4X',
             'db',
             '5432',
             'mrplato'
