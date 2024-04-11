@@ -33,7 +33,7 @@ services:
     environment:
       - POSTGRES_DB=mrplato
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=HySjxzjjZL8cC4X
+      - POSTGRES_PASSWORD=postgres
     ports:
       - 5432
     networks: 
