@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.3c3b6539.css",
-    "main.js": "/static/js/main.31695dd8.js",
+    "main.css": "/static/css/main.d10369b3.css",
+    "main.js": "/static/js/main.bcbcd2ba.js",
     "static/media/aristotle.jpg": "/static/media/aristotle.f77d24fce3e9a99e037f.jpg",
     "static/media/background.png": "/static/media/background.0cca050064b9320d4678.png",
     "static/media/Roboto-Medium.ttf": "/static/media/Roboto-Medium.7c8d04cd831df3033c8a.ttf",
@@ -13,11 +13,11 @@
     "static/media/exercises.png": "/static/media/exercises.6253da98cb448938cd94.png",
     "static/media/challenge.png": "/static/media/challenge.4edc600a103b0b40fbf2.png",
     "index.html": "/index.html",
-    "main.3c3b6539.css.map": "/static/css/main.3c3b6539.css.map",
-    "main.31695dd8.js.map": "/static/js/main.31695dd8.js.map"
+    "main.d10369b3.css.map": "/static/css/main.d10369b3.css.map",
+    "main.bcbcd2ba.js.map": "/static/js/main.bcbcd2ba.js.map"
   },
   "entrypoints": [
-    "static/css/main.3c3b6539.css",
-    "static/js/main.31695dd8.js"
+    "static/css/main.d10369b3.css",
+    "static/js/main.bcbcd2ba.js"
   ]
 }
