@@ -12,7 +12,6 @@ import copy
 
 from web.sdk.mrplato.resources import forms as fms
 from web.sdk.mrplato.resources import equivRules as eqv
-
 #-----------------------------------------------------------------------------        
 class PredRule():
     '''

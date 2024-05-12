@@ -29,7 +29,7 @@ class RegisterActivityByInsertUsecase(UsecaseInterface):
         )
 
         problem = self.problem_facade.register_problem(input_problem)
-        lista_normalizada = [item.decode('utf-8') for item in problem.list_problem]
+        lista_normalizada = [item for item in problem.list_problem]
 
         activity = ActivityFactory.create(
             category=input.category,

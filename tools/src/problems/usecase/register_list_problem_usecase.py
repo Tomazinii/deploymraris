@@ -17,6 +17,7 @@ class RegisterProblemUsecase(UsecaseInterface):
     def execute(self, input: InputRegisterListProblemDto) -> OutputRegisterListProblemDto:
         file = File(name=input.list_problem.filename, file=input.list_problem.file)
 
+
         problem = ProblemFactory.create(
             id=input.id,
             list_name=input.list_name,
@@ -26,9 +27,12 @@ class RegisterProblemUsecase(UsecaseInterface):
             slug=Slug(input.list_name),
             updated_at=input.updated_at,
         )
+        
+  
 
         self.repository.create(input=problem)
         
+
 
         output = OutputRegisterListProblemDto(
             comentary=problem.get_comentary(),
@@ -39,6 +43,7 @@ class RegisterProblemUsecase(UsecaseInterface):
             slug=problem.get_slug().get_slug(),
             updated_at=problem.get_updated_at(),
         )
+
  
 
         return output

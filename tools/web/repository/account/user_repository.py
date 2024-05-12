@@ -65,7 +65,31 @@ class UserRepository(UserRepositoryInterface):
                 raise error
 
     def get_by_id(self, id):
-        return super().get_by_id(id)
+        with DBConnectionHandler() as db:
+            try:
+
+                user_query = db.session.query(UserModel).filter_by(id=id).first()
+                if  user_query is None:
+                    raise BadRequestError("User not found")
+                user = User(
+                    created_at=user_query.created_at,
+                    id=user_query.id,
+                    updated_at=user_query.updated_at,
+                    username=user_query.username
+                )
+                email = Email(user_query.email)
+                user.set_email(email)
+                user.set_is_admin(user_query.is_admin)
+                user.set_super_user(user_query.is_super_user)
+                user.set_password_db(user_query.password)
+                user.authenticate_user(user_query.is_authenticated)
+                user.change_type_user(user_query.user_type)
+
+                return user
+
+            except Exception as error:
+                db.session.rollback()
+                raise error
     
     def check_register(self, email: str) -> bool:
         with DBConnectionHandler() as db:
@@ -82,8 +106,12 @@ class UserRepository(UserRepositoryInterface):
         with DBConnectionHandler() as db:
             try:
                 user_exists = db.session.query(UserModel).filter_by(id=user_id).first()
+                if user_exists is None:
+                    raise BadRequestError("User not found")
+                
                 user_exists.password = password
                 db.session.commit()
+     
             
             except Exception as error:
                 raise error

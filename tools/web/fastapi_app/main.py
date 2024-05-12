@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 # from routers. import selected_form_router, add_rem_red_router
 from exercise_route import exercise_api_route
-from web.fastapi_app.routers import account_router, classroom_router, mrplato_router, problem_router
+from web.fastapi_app.routers import account_router, classroom_router, mrplato_router, problem_router, statistic_router
 # from routers.problem_router import problem_router
 
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -56,4 +56,5 @@ app.include_router(problem_router, prefix="/api/v1/problems")
 app.include_router(mrplato_router, prefix="/api/v1/mrplato")
 app.include_router(account_router, prefix="/api/v1/accounts")
 app.include_router(classroom_router, prefix="/api/v1/classroom")
+app.include_router(statistic_router, prefix="/api/v1/statistic")
 

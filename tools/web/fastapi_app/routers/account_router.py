@@ -2,14 +2,18 @@ from pydantic import BaseModel
 from fastapi import APIRouter,Request,HTTPException,Response
 from src._shared.controller.errors.types.handle_http_error import handle_errors
 from src.account.usecase.change_password_usecase_dto import InputChangePasswordDto
+from src.account.usecase.link_set_new_password_dto import InputNewPasswordDto
 from src.account.usecase.login_usecase_dto import InputLoginUsecase
+from src.account.usecase.set_new_password_dto import InputSetNewPasswordDto
 from web.adapters.http_adapter import http_adapter
 from web.composers.account.change_password_composer import change_password_composer
 from web.composers.account.check_composer import check_authentication_composer
+from web.composers.account.check_link_reset_password_composer import check_link_reset_password_composer
+from web.composers.account.link_reset_password_composer import link_reset_password_composer
 from web.composers.account.login_composer import login_composer
 from web.composers.account.logout_composer import logout_composer
+from web.composers.account.reset_password_composer import reset_password_composer
 from web.middlewares.authentication import authentication_middleware
-from web.middlewares.authorization import authorization_middleware
 from web.session.user_session import cookie
 
 account_router = APIRouter()
@@ -76,6 +80,45 @@ async def change_password(requests: Request, input: InputChangePasswordRouteDto,
         http_response  = handle_errors(error)
         raise HTTPException(status_code=http_response.status_code, detail=f"{http_response.body}")
 
+@account_router.post("/link-forgot-password", status_code=201)
+async def forgot_password(requests: Request, input: InputNewPasswordDto):
+
+    try:
+        response = http_adapter(request=requests, controller=link_reset_password_composer(), input=input, response=None)
+        return response
+    
+    except Exception as error:
+        http_response  = handle_errors(error)
+        raise HTTPException(status_code=http_response.status_code, detail=f"{http_response.body}")
+
+
+
+@account_router.post("/set-password", status_code=201)
+async def set_new_password(requests: Request, input: InputSetNewPasswordDto):
+
+    try:
+        response = http_adapter(request=requests, controller=reset_password_composer(), input=input, response=None)
+        return response
+    
+    except Exception as error:
+        http_response  = handle_errors(error)
+        raise HTTPException(status_code=http_response.status_code, detail=f"{http_response.body}")
+
+
+
+class InputCheckLinkResetPassword(BaseModel):
+    link_id: str
+
+@account_router.post("/check-link-reset-password", status_code=200)
+def check_link_reset_password(requests: Request, input: InputCheckLinkResetPassword):
+    try:
+        link_id = input.link_id
+        response = http_adapter(controller=check_link_reset_password_composer(), request=requests, input=link_id, response=None)
+        return response
+
+    except Exception as error:
+        http_response  = handle_errors(error)
+        raise HTTPException(status_code=http_response.status_code, detail=f"{http_response.body}")
 
 
 @account_router.get("/verify", status_code=200)

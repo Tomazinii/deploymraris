@@ -64,6 +64,7 @@ class ProverUsecase(UsecaseInterface):
                 time=datetime.datetime.now() - session_data.timer,
             )
             self.statistic_facade.register_result_activity(input=input_result)
+            
 
         serialized_instance = pickle.dumps(prover.prover_instance)
         session_data.prover = serialized_instance

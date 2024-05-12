@@ -49,6 +49,21 @@ class ResultActivityRepository(ResultActivityRepositoryInterface):
             return verify
         
 
+    
+    @classmethod
+    def get_solved_activity(self, activity_id, user_id):
+        try:
+            with DBConnectionHandler() as db:
+                element = db.session.query(ResultActivityModel).filter_by(student_id=user_id, activity_id=activity_id).all()
+                if element.__len__() == 0:
+                    raise BadRequestError("Could not find activity")
+           
+                return element
+
+        except Exception as error:
+            db.session.rollback()
+            raise error
+
     @classmethod
     def get_by_classroom(self, classroom_id):
         try:

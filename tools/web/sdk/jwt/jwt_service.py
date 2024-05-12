@@ -8,9 +8,11 @@ class JwtService(JwtServiceInterface):
 
 
     @classmethod
-    def encode(self, data):
+    def encode(self, data, jwt_secret=None):
         algorithm="HS256"
-        jwt_secret = str(uuid4())
+        if jwt_secret is None:
+            jwt_secret = str(uuid4())
+
         encoded_jwt = jwt.encode(data, jwt_secret, algorithm=algorithm)
         return encoded_jwt, jwt_secret
 

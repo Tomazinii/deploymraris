@@ -29,13 +29,16 @@ class GlobalConstants():
     equiv = u'\u21D4' # Bi-implication operator ('⇔')
     cnf = 'CNF'
     dnf = 'DNF'
+    eqv = 'EQV'
+    true2 = 'T'
+    false2 = 'F'
 
     list_of_vars = ['x', 'y', 'z', 'w']
-    list_of_special_consts = [true, false, cnf, dnf]
+    list_of_special_consts = [true, false, true2, false2, eqv, cnf, dnf]
     list_of_consts = ['a', 'b', 'c', 'd', 'e']
     list_of_terms = list_of_vars + list_of_consts
     list_of_quants = [fa,ex ]
-    list_of_functs = ['p', 'q', 'r', 's', 't', 'u']
+    list_of_functs = ['m', 'n', 'o','p', 'q', 'r', 's', 't', 'u']
     list_of_cnecs =  [c_and,c_or,c_if,c_iff]
     list_of_all_conecs = [c_not]+list_of_cnecs
 
@@ -356,10 +359,10 @@ def new_Formula(args):
     :return: a logic formula object - Form*
     '''
 
-    if args[0] == Glob_cnts.c_not:
+    if args[0] == GlobalConstants.c_not:
         form0 = new_Formula(args[1])
         form = Form1(GlobalConstants.c_not, form0)
-    elif len(args) > 2 and args[1] in  list_of_cnecs:  #['^','v','->',',<->']
+    elif len(args) > 2 and args[1] in GlobalConstants.list_of_cnecs:  #['^','v','->',',<->']
         form0 = new_Formula(args[0])
         form1 = new_Formula(args[2])
         form = Form2(form0, args[1], form1)
@@ -383,15 +386,20 @@ def updateDic(dic,index,value):
     '''
     # print(f'index: {index} - value: {value}')
 
-    if index in dic:
-        if dic[index] != value:
-            unify = False
+    try:
+        if index in dic:
+            if dic[index] != value:
+                unify = False
+            else:
+                unify = True
         else:
+            dic[index] = value
             unify = True
-    else:
-        dic[index] = value 
-        unify = True
-    return unify, dic
+        # print(f"unify!")
+        return unify, dic
+    except:
+        # print(f" Not unify!")
+        return False, dic
 
 # -----------------------------------------------------------------------------
 def unify(initDic,formula1,formula2):
@@ -399,32 +407,42 @@ def unify(initDic,formula1,formula2):
         Checks if two logic forms unify, updating the variable mapping.
 
         :param initDic: the variables/values mapping.
-        :param formula1: A formula to be unified.
-        :param formula2: A formula to be unified.
+        :param formula1: A formula (from rules) to be unified.
+        :param formula2: A formula (from proof lines) to be unified.
         :return (1) A boolean (False, if formulas do not unify).
                 (2) The updated mapping (a dictionary).
 
                 Ex.: (p -> q) e (a -> b) produces the mapping {p:a, q:b}
     '''
+
     # print(f'formula1: {formula1} <{type(formula1)}>, formula2: {formula2}<{type(formula2)}>')
 
     if (type(formula1) is Form0) & (type(formula2) is Form0):  # Constants
         r_unify = formula1.getOpnd1() == formula2.getOpnd1()
         return r_unify, initDic
     elif (type(formula1) is Form) & (type(formula2) is Form):  # Atomic formulas
-        r_unify, newDic = updateDic(initDic, formula1.getOpnd1(), formula2.getOpnd1())
-        return True & r_unify, newDic
+        r_unify1, newDic = updateDic(initDic, formula1.getOpnd1(), formula2.getOpnd1())
+        return r_unify1,newDic
     elif(type(formula1) is Form) & (type(formula2) is Form0):  # A variable and a constant (T or C)
         r_unify, newDic = updateDic(initDic, formula1.getOpnd1(), formula2)
         return True & r_unify, newDic
-    elif (type(formula1) is Form) & (type(formula2) is Form1):  # p => ~a produces  {p:~a}
-        r_unify, newDic = updateDic(initDic,formula1.getOpnd1(),formula2)
-        return True & r_unify, newDic
+    elif (type(formula1) is Form) & (type(formula2) is Form1):  # p => ~q produces  {p:~q}; p => ~~~q produces  {p:~q}
+        p = formula1.getOpnd1()
+        q = formula2.getOpnd1()
+        n_q  = simplify_negations(q) # Each two negations are cancelled
+        r_unify1, newDic1 = updateDic(initDic, p, Form1(GlobalConstants.c_not, n_q))
+        return True & r_unify1, newDic1
     elif (type(formula1) is Form) & (type(formula2) is Form2):  # p => a ^ b produces  {p:a ^ b}
         r_unify, newDic = updateDic(initDic,formula1.getOpnd1(),formula2)
         return True & r_unify, newDic
     elif (type(formula1) is Form1) & (type(formula2) is Form1):  # Negations
-        r, newDic = unify(initDic, formula1.getOpnd1(),formula2.getOpnd1() )
+        p = formula1.getOpnd1()
+        n_p  = simplify_negations(p) # Each two negations are cancelled
+        q = formula2.getOpnd1()
+        # print(f"n_p: {n_p}")
+        n_q  = simplify_negations(q) # Each two negations are cancelled
+        # print(f"n_q: {n_q}")
+        r, newDic = unify(initDic,n_p,n_q)
         return r & True, newDic
     # inserted 22/11/2023
     elif (type(formula1) is Form1) & (type(formula2) is Form):  # ~p and p do not unify
@@ -432,34 +450,13 @@ def unify(initDic,formula1,formula2):
         if f1_opnd1 == formula2:
             return False, initDic
         else:
-            r, newDic = unify(initDic, f1_opnd1, formula2)  # ~p => A produces {p:~A}
+            r, newDic = unify(initDic, f1_opnd1, Form1(GlobalConstants.c_not,formula2))  # ~p => A produces {p:~A}
             return r & True, newDic
-    ###################
-    elif type(formula1) is Form1:
-        f1_opnd1 = formula1.getOpnd1() # Remove negation from formula 1
-        nformula2 = Form1(GlobalConstants.c_not,formula2) #  Denies formula 2
-        if type(f1_opnd1) is Form1: # ~~p => A produces {p:~~A}
-            r, newDic = unify(initDic, f1_opnd1.getOpnd1(),  Form1(GlobalConstants.c_not,nformula2))
-        else: # {~p => ~A}
-        # print(f'f1.opnd1: {formula1.getOpnd1()} - {type(formula1.getOpnd1())}>, f2.opnd1: {formula2.getOpnd1()}- {type(formula2.getOpnd1())}>')
-            r, newDic = unify(initDic, f1_opnd1,nformula2 )
+    elif (type(formula1) is Form2) & (type(formula2) is Form1):
+        q = formula2.getOpnd1()
+        n_q  = simplify_negations(q) # Each two negations are cancelled
+        r, newDic = unify(initDic, formula1,n_q)
         return r & True, newDic
-
-    # elif (type(formula1) is Form1) & (type(formula2) is Form):  # ~p => a produces {p:~a}
-    #     nformula2 = Form1(GlobalConstants.c_not,formula2) #  Denies formula 2
-    #     f1_opnd1 = formula1.getOpnd1()
-    #     if type(f1_opnd1) is Form1: # ~~p => a produces {p:~~a}
-    #         r, newDic = unify(initDic, f1_opnd1.getOpnd1(),  Form1(GlobalConstants.c_not,nformula2))
-    #     else:
-    #     # print(f'f1.opnd1: {formula1.getOpnd1()} - {type(formula1.getOpnd1())}>, f2.opnd1: {formula2.getOpnd1()}- {type(formula2.getOpnd1())}>')
-    #         r, newDic = unify(initDic, formula1.getOpnd1(),nformula2 )
-    #     return r & True, newDic
-    # elif (type(formula1) is Form1) & (type(formula2) is Form2):  # ~p  => q op r produces {p: ~(q op r)}
-    #     print('aqui')
-    #     nformula2 = Form1(GlobalConstants.c_not,formula2) #  Denies formula 2
-    #     f1_opnd1 = formula1.getOpnd1()
-    #     r, newDic = unify(initDic, f1_opnd1, nformula2)
-    #     return r & True, newDic
     elif (type(formula1) is Form2) & (type(formula2) is Form2):
         if formula1.getOper() == formula2.getOper(): # cond., bicond., conj. e disj.
             r1, newDic = unify(initDic, formula1.getOpnd1(),formula2.getOpnd1() )
@@ -477,6 +474,20 @@ def unify(initDic,formula1,formula2):
         return True & r_unify, newDic
     else:
         return False, initDic
+
+
+# -----------------------------------------------------------------------------
+def simplify_negations(formula): # type(formula)  is Form1
+    # The original formula has one negation, at least
+
+    if type(formula) is Form1: #The original formula has two negation, at least
+        opnd1 = formula.getOpnd1() #Removes the first negation
+        if type(opnd1) is Form1: #The original formula has three negation, at least
+            opnd2 = opnd1.getOpnd1()  # Removes the first negation
+            return simplify_negations(opnd2)
+        else: return formula
+    else:
+        return formula
 
 # -----------------------------------------------------------------------------
 def index_form(pos, form):
@@ -745,17 +756,17 @@ def gen_repr2(form):
         # print(f'nf: {nf}')
         return r, err_message, nf
     elif form[0] in GlobalConstants.list_of_cnecs :  # Those operations must have two operands - [ '^','v','->','<->']
-        err_message = 'Error: the first operand is missing.'
+        err_message = f'Error: the first operand is missing: {form[0]}.'
         return False, err_message, None
     elif form[1] in GlobalConstants.list_of_cnecs:  # Those operations must have two operands - [ '^','v','->','<->']
-        err_message = 'Error: the second operand is missing.'
+        err_message = f'Error: the second operand is missing: {form[1]}.'
         return False, err_message, None
     elif form[0] in GlobalConstants.list_of_functs:  # Those operations must have an operand - ['p', 'q', 'r', 's', 't', 'u']
         pred_vars = list(filter((',').__ne__, form[1]))  # remove all occurences of ',' from the list of vars
         nf = Pred(form[0],pred_vars)
         return True, '', nf
     else:
-        err_message= 'Error: wrong formula.'
+        err_message= f'Error: wrong formula: {form}.'
         # print(f'rp: {err_message} ')
         return False, err_message, None
 
@@ -780,10 +791,10 @@ def gen_reprForm2( oper, opnd1,opnd2):
             if r:
                 return r, error_message, Form2(r_opnd1, oper, r_opnd2)
             else:
-                err_message = 'Error: the second operand is missing.'
+                err_message = f'Error: the second operand is missing: {opnd2}.'
                 return r, err_message, None
         else:
-            err_message= 'Error: the first operand is missing.'
+            err_message= f'Error: the first operand is missing: {opnd1}.'
             return r, err_message, None
 
 # -----------------------------------------------------------------------------

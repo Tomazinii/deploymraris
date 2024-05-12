@@ -15,7 +15,9 @@ def prover(prover_instance, data: InputProverDto, problem: str) -> OutputProverD
     selection = data.selection
 
     pv = prover_instance
+
     tls = tools.UsefullTools()
+
     rule_types = {'0': 'HYP', '1': 'INF', '2': 'EQ', '3': 'PRED_I', '4': 'PRED_E'}
     rule_type = rule_types[type_selected]
 
@@ -25,6 +27,7 @@ def prover(prover_instance, data: InputProverDto, problem: str) -> OutputProverD
 
     r, msg, user_input, new_line, proof_line_updated = \
                 pv.prove(rule_type, sel_rule, selected_proof_line_indexes, pv.proof_lines, (0, None, total_or_partial))
+    
 
 
     if not r:

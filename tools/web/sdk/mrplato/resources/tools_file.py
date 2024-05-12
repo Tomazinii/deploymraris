@@ -14,7 +14,6 @@ from web.sdk.mrplato.resources import equivRules as equiv
 from web.sdk.mrplato.resources import predRules as pred
 from web.sdk.mrplato.resources import deducInfer as ddi
 
-
 # -----------------------------------------------------------------------------
 class Prover():
     """
@@ -24,13 +23,11 @@ class Prover():
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-
         # self.time = NumericProperty(0)  # Contador de tempo
         self.counter = 0
         self.errors = 0
 
         self.rti = inf.createInfRules()
-
         self.rte = equiv.createEquRules()
         self.rtp = pred.createPredRules()
         self.rule_table = (self.rti, self.rte, self.rtp)
@@ -43,6 +40,8 @@ class Prover():
 
         self.argument_conclusion = ''
         self.argument_premisses = []
+
+        self.can_exchange_ant_conseq = False
 
         # self.premisses = []
         # self.conclusion = []
@@ -110,26 +109,29 @@ class Prover():
     def input_an_argument(self, selected_problem):
         '''
 
-        '''
-        lp = selected_problem.split(' - ')  # lp = [index, argument]
-        # print(f'lp: {lp}')
+               '''
+        l_premisses, s_conclusion = self.extract_premisses_and_conclusion(selected_problem)
 
-        try:
-            input_list = lp[1].replace('|-', fms.GlobalConstants.c_ass)  # Replace '->' by  '⊢'
-            l_terms = input_list.split(' ' + fms.GlobalConstants.c_ass + ' ')  # Conclusion must appear after ' ⊢ "
-            # l_terms is a list of 2 elements: a string of premisses and a conclusion
-            s_premisses = str(l_terms[0])
-            s_conclusion = l_terms[1]
-        except:
-            error_message0 = selected_problem
-            error_message = error_message0 + '\nArgument malformed. Please, fix it.'
-            return False, error_message
-
-        # print(f's_premisses: {s_premisses}')
-        l_premisses = s_premisses.split(' , ')  # Premisses must be separated by  SPACE-COMMA-SPACE
+        # lp = selected_problem.split(' - ')  # lp = [index, argument]
+        # # print(f'lp: {lp}')
+        #
+        # try:
+        #     input_list = lp[1].replace('|-', fms.GlobalConstants.c_ass)  # Replace '->' by  '⊢'
+        #     l_terms = input_list.split(' ' + fms.GlobalConstants.c_ass + ' ')  # Conclusion must appear after ' ⊢ "
+        #     # l_terms is a list of 2 elements: a string of premisses and a conclusion
+        #     s_premisses = str(l_terms[0])
+        #     s_conclusion = l_terms[1]
+        # except:
+        #     error_message0 = selected_problem
+        #     error_message = error_message0 + '\nArgument malformed. Please, fix it.'
+        #     return False, error_message
+        #
+        # # print(f's_premisses: {s_premisses}')
+        # l_premisses = s_premisses.split(' , ')  # Premisses must be separated by  SPACE-COMMA-SPACE
         # print(f'l_premisses: {l_premisses}')
-
+        # print(f's_conclusion: {s_conclusion}')
         r, msg = self.prepare_list_of_premisses(l_premisses)
+
         if not r:
             return r, msg
         else:
@@ -138,6 +140,42 @@ class Prover():
                 return r, msg
             else:
                 return True, ''
+
+
+    # -----------------------------------------------------------------------------
+    def extract_premisses_and_conclusion0(self, selected_problem):
+
+        arg = ''.join(selected_problem)
+        l_arg = arg.split('|=')
+        l_premisses = l_arg[0].split('&')
+        conclusion = l_arg[1]
+
+        return l_premisses, conclusion
+
+
+    # -----------------------------------------------------------------------------
+    def extract_premisses_and_conclusion(self, selected_problem):
+        # print(f"selected_problem: {selected_problem}")
+        # selected_problem = selected_problem.rstrip()  # Remove control character from right of the string (\n for instance)
+        lp = selected_problem
+        if " - " in selected_problem:
+            parts = selected_problem.split(' - ')  # lp = [index, argument]
+            lp = parts[1]
+
+
+        try:
+            input_list = lp.replace('|=', fms.GlobalConstants.c_ass)  # Replace '|=' by  '⊢'
+            l_terms = input_list.split(' ' + fms.GlobalConstants.c_ass + ' ')  # Conclusion must appear after ' ⊢ "
+            # l_terms is a list of 2 elements: a string of premisses and a conclusion
+            s_premisses = str(l_terms[0])
+            s_conclusion = l_terms[1]
+            l_premisses = s_premisses.split(' , ')  # Premisses must be separated by  SPACE-COMMA-SPACE
+
+        except:
+            error_message = '\nArgument malformed. Please, fix it.'
+            return False, error_message
+
+        return l_premisses, s_conclusion
 
     # -----------------------------------------------------------------------------
     def prepare_list_of_premisses(self, l_premisses):
@@ -170,7 +208,15 @@ class Prover():
         list_s_conclusion = list(
             filter((',').__ne__, list_s_conclusion))  # remove all occurrences of ',' from the input_string
 
-        if list_s_conclusion[0] == fms.GlobalConstants.cnf:
+        if list_s_conclusion[0] == fms.GlobalConstants.eqv:
+            # self.argument_conclusion = fms.GlobalConstants.eqv
+            self.argument_conclusion = self.remove_rule_reference(self.argument_premisses[1])
+            self.argument_premisses = [self.argument_premisses[0]]
+            self.proof_lines = self.argument_premisses
+            self.only_equiv_rules = True
+            self.can_exchange_ant_conseq = True
+            return True, ''
+        elif list_s_conclusion[0] == fms.GlobalConstants.cnf:
             # self.ids.in_arg_label.text = self.ids.in_arg_label.text + '\n' + \
             #                              fms.GlobalConstants.c_equiv + ' CNF'
             self.argument_conclusion = fms.GlobalConstants.cnf
@@ -284,7 +330,7 @@ class Prover():
         r, msg = tools.check_if_the_lines_are_forbidden(selected_proof_line_indexes, self.forbidden_lines)
 
         if not r:  # User selected more than one line or the line selected is forbidden
-            return r, msg, 0,  None, proof_lines_list
+            return r, msg, 0, None, proof_lines_list
         else:
             # print(rule_type, sel_rule, selected_proof_line_indexes)
             proof_lines = []
@@ -295,7 +341,9 @@ class Prover():
                 error_message = 'Choose a rule first, please.'
                 user_input = 0
                 return False, error_message, user_input, None, None
-            if not selected_proof_line_indexes:  # No proof lines where selected - selected_proof_line_indexes = []
+            if (rule_type == "HYP"):
+                selected_proof_line_indexes = 0
+            elif not selected_proof_line_indexes:  # No proof lines where selected - selected_proof_line_indexes = []
                 error_message = 'Choose at least one proof line first, please'
                 user_input = 0
                 return False, error_message, user_input, None, None
@@ -325,12 +373,12 @@ class Prover():
 
         if rule_type == 'HYP':  # Hypothesis rule
             rule = self.rti[rule_number]  # Selected rule
-            error_message = "Wrong number of selected proof_lines."
-            if len(selected_proof_line_indexes) != len(rule.getPremis()):
-                return False, error_message, 0, None, proof_line_list
-            else:
-                r, msg, user_input, new_line = \
-                    self.apply_hypothesis_rule(rule_number, proof_line_list, user_response)
+            # error_message = "Wrong number of selected proof_lines."
+            # if len(selected_proof_line_indexes) != len(rule.getPremis()):
+            #     return False, error_message, 0, None, proof_line_list
+            # else:
+            r, msg, user_input, new_line = \
+                self.apply_hypothesis_rule(rule_number, proof_line_list, user_response)
         elif rule_type == 'INF':  # Inference rule
             rule = self.rti[rule_number]  # Selected rule
             error_message = "Wrong number of selected proof_lines."
@@ -340,43 +388,29 @@ class Prover():
                 r, msg, user_input, new_line = \
                     self.apply_inference_rule(rule, selected_proof_line_indexes,
                                               proof_line_list, user_response)
-        elif (rule_type == 'EQ') or (rule_type == 'PRED_E'):
-            if rule_type == 'EQ':
-                rule = self.rte[rule_number]
-            else:
-                rule = self.rtp[1][rule_number]
-
+        elif rule_type == 'EQ':  # Equivalence rule
+            rule = self.rte[rule_number]  # Selected rule
             error_message = "Wrong number of selected proof_lines."
             if len(selected_proof_line_indexes) != 1:
                 return False, error_message, 0, None, proof_line_list
             else:
-                r, msg, user_input, new_line = (
-                    self.apply_eq_or_pred_eq_rule(rule_type, rule_number,
-                                                  selected_proof_line_indexes,
-                                                  proof_line_list, user_response))
+                r, msg, user_input, new_line = \
+                    self.apply_equivalence_rule(rule,
+                                                selected_proof_line_indexes,
+                                                proof_line_list, user_response)
 
-        # elif rule_type == 'EQ':  # Equivalence rule
-        #     rule = self.rte[rule_number]  # Selected rule
-        #     error_message = "Wrong number of selected proof_lines."
-        #     if len(selected_proof_line_indexes) != 1:
-        #         return False, error_message, 0, None, proof_line_list
-        #     else:
-        #         r, msg, user_input, new_line = \
-        #             self.apply_equivalence_rule(rule,
-        #                                         selected_proof_line_indexes,
-        #                                         proof_line_list, user_response)
-        #
-        # elif rule_type == 'PRED_E':  # Predicate equivalence rule
-        #     rule = self.rtp[1][rule_number]
-        #     user_input = 0
-        #     error_message = "Wrong number of selected proof_lines."
-        #     if len(selected_proof_line_indexes) != 1:
-        #         return False, error_message, user_input, None, proof_line_list
-        #     else:
-        #         r, msg, user_input, new_line = \
-        #             self.apply_predicate_equivalence_rule(rule,
-        #                                                   selected_proof_line_indexes,
-        #                                                   proof_line_list)
+        elif rule_type == 'PRED_E':  # Predicate equivalence rule
+            rule = self.rtp[1][rule_number]
+            user_input = 0
+            error_message = "Wrong number of selected proof_lines."
+            if len(selected_proof_line_indexes) != 1:
+                return False, error_message, user_input, None, proof_line_list
+            else:
+                r, msg, user_input, new_line = \
+                    self.apply_predicate_equivalence_rule(rule,
+                                                          selected_proof_line_indexes,
+                                                          proof_line_list,
+                                                          user_response)
         else:  # rule_type == 'PRED_I' - Predicate inference rule
             rule = self.rtp[0][rule_number]
             error_message = "Wrong number of selected proof_lines."
@@ -393,8 +427,8 @@ class Prover():
             rule_nick = rule.getNick()
             self.line_index += 1  # Increments proof line numeration
             # Inserts new line in proof lines list
-            lines_used = str(rule_nick)+"-"+str(selected_proof_line_indexes)
-            proof_line_list.append((new_line, lines_used ))
+            lines_used = str(rule_nick) + "-" + str(selected_proof_line_indexes)
+            proof_line_list.append((new_line, lines_used))
             # content = ' '.join(new_line)
             # lines_used = ' , '.join(map(str,selected_proof_line_indexes))
             # new_line = {"content": content, "rule_used": rule_nick, "lines_used":lines_used, "type:":"add"}
@@ -462,7 +496,7 @@ class Prover():
             while i < len(proof_line_list):
                 self.forbidden_lines.append(i)
                 i += 1
-            print(f'self.forbidden_lines: {self.forbidden_lines}')
+            # print(f'self.forbidden_lines: {self.forbidden_lines}')
             self.list_of_hypothesis.pop()  # Excludes hypothesis
             return True, '', new_line
         else:
@@ -515,7 +549,6 @@ class Prover():
         :return: True/False, an error message and the new proof line generated
         '''
 
-
         # print('PROVING INFERENCE:')
 
         # Put all selected proof lines into a list
@@ -526,7 +559,8 @@ class Prover():
             sel_proof_lines.append(proof_line_list[i])
 
         if (self.argument_conclusion == fms.GlobalConstants.cnf or self.argument_conclusion == fms.GlobalConstants.dnf \
-                or self.argument_conclusion == fms.GlobalConstants.true or self.argument_conclusion == fms.GlobalConstants.false):
+                or self.argument_conclusion == fms.GlobalConstants.true or self.argument_conclusion == fms.GlobalConstants.false
+                or self.argument_conclusion == fms.GlobalConstants.eqv):
             error_message = 'Only equivalence rules \n can be used \n\n when proving equivalences.'
             user_input = 0
             return False, error_message, user_input, None
@@ -597,7 +631,144 @@ class Prover():
         return l
 
     # -----------------------------------------------------------------------------
-    def apply_eq_or_pred_eq_rule(self, rule_type, rule_number, selected_proof_line_indexes, proof_line_list, user_response):
+    def apply_equivalence_rule(self, rule, selected_proof_line_indexes,
+                               proof_line_list,user_response):
+        '''
+          Apply an equivalence rule to a selected proof line. Just one proof line
+          must be selected
+                           :param rule: the selected rule
+                           :param selected_proof_line_indexes: list of the indices of the selected proof lines
+                           :param proof_line_list: the list of proof lines
+                           :return: True/False, an error message
+                           user_response: object
+                           '''
+
+        # print('PROVING EQUIVALENCES:')
+
+        tools = UsefullTools()
+
+        user_resp, sub_formula, total_ou_partial = user_response
+
+        selected_proof_line = proof_line_list[selected_proof_line_indexes[0]]
+        sel_lines = self.remove_rule_references([selected_proof_line])
+        # print(f'sel_lines: {sel_lines}')
+        line = sel_lines[0]  # Just one line was selected
+        # print(f'line: {line} - type: {type(line)}')
+        ind_form_list = fms.index_form(0, line)
+        options = tools.get_options(ind_form_list)
+        # print(f'options::::: {options}')
+
+        if (total_ou_partial == "partial") and (sub_formula is None): # Any part of the formula were selected
+            user_input = 1
+            return True, '', user_input, (["Select a part of the formula, please."], [options])
+        else:
+            original_form = options[0]
+            r, msg, user_input, new_line = self.apply_equivalence_rule2(rule, original_form,
+                                                                        line, user_response)
+            return r, msg, user_input, new_line
+
+    # -----------------------------------------------------------------------------
+    def apply_equivalence_rule2(self, rule, original_form, line, user_response):
+        '''
+        Apply an equivalence rule to a selected proof line. Just one proof line
+        must be selected
+        :param rule: the selected rule
+        :param selected_proof_line_indexes: list of the indices of the selected proof lines
+        :param proof_line_list: the list of proof lines
+        :return: True/False, an error message
+        '''
+
+        user_resp, sub_formula, total_or_partial = user_response
+
+        if total_or_partial == "total":
+            r, msg, new_line = self.apply_equiv_rule(rule, line)
+            user_input = 0
+            return r, msg, user_input, new_line
+        else: #total_or_partial == "partial"
+            r, msg, new_line = self.apply_partial_eq(rule, original_form, sub_formula)
+            # print(f"r: {r} - msg: {msg} - new_line: {new_line}")
+            user_input = 0
+            return r, msg, user_input, new_line
+
+
+    # -----------------------------------------------------------------------------
+    def apply_equiv_rule(self, rule, form):
+        '''
+            Apply the selected rule to the WHOLE proof line selected
+            :param rule: the selected rule
+            :param form: the form (the selected proof line)
+            :return: True/False, an error message and the new proof line generated
+            '''
+
+        if type(form) is fms.Fof:
+            scope = form.getScope()
+            quants = form.getQuantifiers()
+            r, msg, n_scope = equiv.applyEquivRule(rule, [scope])
+            new_line = fms.Fof(quants, n_scope)
+        else:
+            r, msg, new_line = equiv.applyEquivRule(rule, [form])
+
+        return r, msg, new_line
+
+
+
+    # -----------------------------------------------------------------------------
+    def apply_partial_eq(self, rule, original_form, selection):
+        '''
+                        Apply the selected rule to a part of the proof line selected
+                        :param rule: the selected rule
+                        :param original_form: the original proof line selected
+                        :param selection: the sub_formula of the original proof line
+                        :return: True/False, an error message and the new proof line generated
+                            the result of application of the rule to a part of the line
+                            must replace the original part of the line
+                        '''
+
+        original_form = original_form.split(' - AT POS ')[0]
+        sform_original, form_list, begin, end = self.get_partial_formula(selection)
+
+        tools = UsefullTools()
+        r, error_message, prep_formula = tools.remove_parenthesis(form_list)
+        if not r:
+            return r, error_message, None
+        else:
+            # print(f'prep_formula: {prep_formula}')
+            r, error_message, rep_formula = fms.generate_represent(prep_formula)
+            # print(f'rep_formula: {rep_formula} - type: {type(rep_formula)}')
+            if not r:
+                return r, error_message, None
+            else:
+                r, error_message, new_form = equiv.applyEquivRule(rule, [rep_formula])
+                # print(f'newForm: {new_form} - type: {type(new_form)}')
+
+                if not r:
+                    return r, error_message, None
+                else:
+                    s_newForm = str(new_form)
+
+                    if len(s_newForm) > 2:
+                        if original_form[begin - 1] == '(' and original_form[end + 1] == ')':
+                            pass
+                        else:
+                            s_newForm = "(" + s_newForm + ")"
+
+                    cnt = fms.GlobalConstants()
+                    # print(f'snewForm: {s_newForm} - type: {type(s_newForm)}')
+                    s_newForm = s_newForm.replace(cnt.c_not + cnt.c_not, cnt.c_not + ' ' + cnt.c_not)
+                    # print(f's_newForm2: {s_newForm} - type: {type(s_newForm)}')
+
+                    # print(f'original_form: {original_form} - type: {type(original_form)}')
+                    # print(f'sform_original: {sform_original} - len(sform_original): {len(sform_original)}')
+                    new_text = original_form.replace(sform_original, s_newForm)
+                    # print(f'new_text: {new_text}')
+                    r, msg, prep_new_text = tools.prepare_new_formula(new_text)
+                    # print(f'prep_new_text: {prep_new_text}')
+                    return r, msg, prep_new_text
+
+
+    # -----------------------------------------------------------------------------
+    def apply_predicate_equivalence_rule(self, rule, selected_proof_line_indexes,
+                                         proof_line_list,user_response):
         '''
                Apply an equivalence rule to a selected proof line. Just one proof line
                must be selected
@@ -619,39 +790,21 @@ class Prover():
         # print(f'line: {line} - type: {type(line)}')
         ind_form_list = fms.index_form(0, line)
         options = tools.get_options(ind_form_list)
+        # print(f'options::::: {options}')
 
-        if (sub_formula is None):
-                # and (total_ou_partial == "partial"):
+        if (total_ou_partial == "partial") and (sub_formula is None): # Any part of the formula were selected
+            # and (total_ou_partial == "partial"):
             user_input = 1
             return True, '', user_input, (["Select a part of the formula, please."], [options])
         else:
             original_form = options[0]
-            r, msg, user_input, new_line = self.apply_equivalence_rule_Nova(rule_type, rule_number,original_form, line, user_response)
+            r, msg, user_input, new_line = self.apply_predicate_equivalence_rule2(
+                rule, original_form, line,user_response)
             return r, msg, user_input, new_line
 
 
-            # if rule_type == 'EQ':
-            #     rule = self.rte[rule_number]  # Selected rule
-            #     r, msg, user_input, new_line = \
-            #         self.apply_equivalence_rule(rule,options,form,user_response)
-            #
-            #     return r, msg, user_input, new_line
-            #     # if sub_formula == options[0]:  # The rule is applied to the whole formula
-            #     #     r, msg, new_line = self.apply_equiv_rule(rule, form)
-            #     #     user_input = 0
-            #     #     return r, msg, user_input, new_line
-            #     # else:
-            #     #     original_form = options[0]  # The first option is the whole formula
-            #     #     r, msg, new_line = self.apply_equiv_in_part_or_the_line(rule,
-            #     #                                                             original_form,
-            #     #                                                             sub_formula)
-            #     #     user_input = 0
-            #     #     return r, msg, user_input, new_line
-            # else:
-            #     rule = self.rtp[1][rule_number]
-            #     pass
     # -----------------------------------------------------------------------------
-    def apply_equivalence_rule_Nova(self, rule_type, rule_number, original_form, line, user_response):
+    def apply_predicate_equivalence_rule2(self, rule, original_form, line, user_response):
         '''
         Apply an equivalence rule to a selected proof line. Just one proof line
         must be selected
@@ -663,58 +816,45 @@ class Prover():
 
         user_resp, sub_formula, total_or_partial = user_response
 
-        if total_or_partial  == "total":
-            if rule_type == 'EQ':
-                rule = self.rte[rule_number]
-
-                r, msg, new_line = self.apply_equiv_rule(rule, line)
-            else:
-                rule = self.rtp[1][rule_number]
-                r, msg, new_line = self.apply_predicate_equivalence_rule2(rule, line)
+        if total_or_partial == "total":
+            r, msg, new_line = self.apply_predicate_equiv_rule(rule, line)
 
             user_input = 0
             return r, msg, user_input, new_line
         else:
-            r, msg, new_line = self.apply_partial(rule_type, rule_number,original_form,sub_formula)
+            r, msg, new_line = self.apply_partial_equiv_pred(rule, original_form, sub_formula)
             user_input = 0
             return r, msg, user_input, new_line
-
-    # elif rule_type == 'PRED_E':  # Predicate equivalence rule
-
-    #     rule = self.rtp[1][rule_number]
-    #     user_input = 0
-    #     error_message = "Wrong number of selected proof_lines."
-    #     if len(selected_proof_line_indexes) != 1:
-    #         return False, error_message, user_input, None, proof_line_list
-    #     else:
-    #         r, msg, user_input, new_line = \
-    #             self.apply_predicate_equivalence_rule(rule,
-    #                                                   selected_proof_line_indexes,
-    #                                                   proof_line_list)
-
 
 
     # -----------------------------------------------------------------------------
-    def apply_equiv_rule(self, rule, form):
-        '''
-        Apply the selected rule to the WHOLE proof line selected
-        :param rule: the selected rule
-        :param form: the form (the selected proof line)
-        :return: True/False, an error message and the new proof line generated
-        '''
+    def apply_predicate_equiv_rule(self, rule, form):
 
-        if type(form) is fms.Fof:
-            scope = form.getScope()
-            quants = form.getQuantifiers()
-            r, msg, n_scope = equiv.applyEquivRule(rule, [scope])
-            new_line = fms.Fof(quants, n_scope)
+        # To user predicates rules, just one line must be selected
+        rule_name = rule.getName()
+        rule_nick = rule.getNick()
+
+        # index = selected_proof_line_indexes[0]  # just one line can be selected
+        # selected_line = proof_line_list[index]
+        # # print(f'selected_line: {selected_line} - type: {type(selected_line)}')
+        # form = self.remove_rule_reference(selected_line)
+        # print(f'form: {form} - type: {type(form)}')
+
+        if (rule_nick == 'DME_rl') or (rule_nick == 'DMU_rl'):
+            r, msg, new_line = self.apply_deMorgan_right_to_left(form, rule_name)
+        elif (rule_nick == 'DME_lr') or (rule_nick == 'DMU_lr'):
+            r, msg, new_line = self.apply_deMorgan_left_to_right(form, rule_name)
         else:
-            r, msg, new_line = equiv.applyEquivRule(rule, [form])
+            msg = 'The selected rule cannot beE \napplied to predicates. \nThe rule <' \
+                  + rule_name + '>\ncannot be applied.' + '\nPlease, try again.'
+            new_line = ' '
+            r = False
 
+        # user_input = 0
         return r, msg, new_line
 
     # -----------------------------------------------------------------------------
-    def apply_partial(self, rule_type, rule_number, original_form, selection):
+    def apply_partial_equiv_pred(self, rule, original_form, selection):
         '''
         Apply the selected rule to a part of the proof line selected
         :param rule: the selected rule
@@ -739,13 +879,7 @@ class Prover():
             if not r:
                 return r, error_message, None
             else:
-                if rule_type == "EQ":
-                    rule = self.rte[rule_number]
-                    r, error_message, new_form = equiv.applyEquivRule(rule, [rep_formula])
-                    # print(f'newForm: {new_form} - type: {type(new_form)}')
-                else:
-                    rule = self.rtp[1][rule_number] # Equivalence predicate rule
-                    r, msg, new_form = self.apply_predicate_equivalence_rule2( rule,rep_formula)
+                r, msg, new_form = self.apply_predicate_equiv_rule(rule, rep_formula)
 
                 if not r:
                     return r, error_message, None
@@ -774,7 +908,6 @@ class Prover():
     # -----------------------------------------------------------------------------
     def get_partial_formula(self, selection):
 
-        # print(f'\n\nselection: {selection}, type :{type(selection)}')
 
         # s_original_form = original_form.split(' - AT POS ')[0]
 
@@ -805,19 +938,6 @@ class Prover():
 
         return sform_original, l_sform, begin, end
 
-    # -----------------------------------------------------------------------------
-    def prepare_disjunct(self, selected_proof_lines):
-
-        tools = UsefullTools()
-        r, msg = tools.check_if_just_one_line_selected(selected_proof_lines)
-
-        if not r:
-            return r, msg, None
-        else:
-            r, msg, new_disjunct = tools.input_formula()
-
-            return r, msg, new_disjunct
-
 
     # -----------------------------------------------------------------------------
     def apply_predicate_inference_rule(self, rule, selected_proof_line_indexes,
@@ -836,7 +956,6 @@ class Prover():
 
         line_number = selected_proof_line_indexes[0]  # Just one proof line can be selected
         # print(f'proof_line_list: {proof_line_list}')
-
         selected_line = proof_line_list[line_number]
         # print(f'selected_line: {selected_line} - type: {type(selected_line)}')
         form = self.remove_rule_reference(selected_line)
@@ -857,8 +976,8 @@ class Prover():
                 if user_resp is None:
                     user_input = 1  # User must select a quantifier and a term
                     return True, msg, user_input, \
-                        (["Select a term, please.","Select a quantifier, please.", ],
-                         [term_options,quant_options,])
+                        (["Select a term, please.", "Select a quantifier, please.", ],
+                         [term_options, quant_options, ])
                 else:
                     selected_quant = user_resp[0]
                     selected_term = user_resp[1]
@@ -870,18 +989,22 @@ class Prover():
                     user_input = 0
                     return r, msg, user_input, new_line
         elif rule_nick == 'GU_lr':
-
             var_options = fms.GlobalConstants.list_of_vars
             # print(f'var_options: {var_options}')
             tools = UsefullTools()
             term_options = tools.get_scope_terms(form, [])
-            term_options =  list(set(term_options)) # Remove repeated elements
+            term_options = list(set(term_options))  # Remove repeated elements
             # term_options = fms.GlobalConstants.list_of_terms
             # print(f'term_options: {term_options}')
+            if not term_options:
+                user_input = 0
+                error_msg= 'There is no term to replace.' \
+                           '\n\nThe rule <Universal Generalization> cannot  be applied.'
+                return False, error_msg, user_input, ''
             if user_resp is None:
                 user_input = 1  # User must select a var and a term
-                return True, ' ', user_input,\
-                    ([ "Select a term, please.","Select a variable, please."], [term_options,var_options])
+                return True, ' ', user_input, \
+                    (["Select a term, please.", "Select a variable, please."], [term_options, var_options])
             else:
                 selected_var = user_resp[0]
                 selected_term = user_resp[1]
@@ -891,23 +1014,30 @@ class Prover():
                                                                        proof_line_list,
                                                                        selected_var, selected_term)
                 return r, msg, user_input, new_line
+
         elif rule_nick == 'GE_lr':
             var_options = fms.GlobalConstants.list_of_vars
             # print(f'var_options: {var_options}')
             tools = UsefullTools()
             term_options = tools.get_scope_terms(form, [])
-            term_options =  list(set(term_options)) # Remove repeated elements
+            term_options = list(set(term_options))  # Remove repeated elements
             # term_options = fms.GlobalConstants.list_of_terms
             # print(f'term_options: {term_options}')
-            if user_resp is None:
+            if not term_options:
+                user_input = 0
+                error_msg= 'There is no term to replace.' \
+                           '\n\nThe rule <Existential Generalization> cannot  be applied.'
+                return False, error_msg, user_input, ''
+            elif user_resp is None:
                 user_input = 1  # User must select a var and a term
                 return True, ' ', user_input, \
-                    (["Select a term, please.","Select a variable, please."],
-                     [ term_options,var_options])
+                    (["Select a term, please.", "Select a variable, please."],
+                     [term_options, var_options])
             else:
                 r, msg, user_input, new_line = self.apply_exist_generalization_rule(user_response, form)
 
                 return r, msg, user_input, new_line
+
         else:
             error_message = 'Wrong rule selected.'
             return False, error_message, user_input, None
@@ -1035,24 +1165,6 @@ class Prover():
         else:
             q_vars = []
 
-        # print(f'q_vars: {q_vars}')
-
-        # var_options = fms.GlobalConstants.list_of_vars
-        # print(f'var_options: {var_options}')
-        # term_options = fms.GlobalConstants.list_of_terms
-        # print(f'term_options: {term_options}')
-
-        # if rule_nick == 'GU_lr':
-        # if user_input:
-        #     user_input = 1
-        #     return user_resp, user_input, '', [var_options, term_options]  # User must select a var and a term
-        # else:
-        #     # selected_var_index = user_response[1][0]
-        #     # selected_term_index = user_response[1][1]
-        #     # selected_var = var_options[selected_var_index]
-        #     # selected_term = term_options[selected_term_index]
-        #     # print(f'selected_var: {selected_var}')
-        #     # print(f'selected_term: {selected_term}')
         prem_and_hyp = self.remove_rule_references(self.argument_premisses)
         # prem_and_hyp = self.argument_premisses
         for p in self.list_of_hypothesis:
@@ -1083,6 +1195,7 @@ class Prover():
 
             tools = UsefullTools()
             terms = tools.get_scope_terms(form, [])
+            # print(f'terms: {terms}')
             i = terms.count(selected_term)  # Number of occurrences of the term
             positions = []
 
@@ -1099,7 +1212,7 @@ class Prover():
                 error_message = "The chosen term is not in the formula."
                 return False, error_message, user_input, (None, None)
             elif len(term_to_replace_options) > 1:
-                #User must select positions where term must be replaced
+                # User must select positions where term must be replaced
                 user_input = 2
                 return True, ' ', user_input, (["Select the terms to replace, please."],
                                                term_to_replace_options, selected_var, selected_term)
@@ -1109,7 +1222,7 @@ class Prover():
 
         else:
 
-            selected_term_to_replace,selected_var,selected_term = user_resp_total
+            selected_term_to_replace, selected_var, selected_term = user_resp_total
             # print(f'selected_var: {selected_var}')
             # print(f'selected_term: {selected_term}')
             # print(f'selected_terms_to_replace: {selected_term_to_replace}')
@@ -1130,15 +1243,13 @@ class Prover():
             r, msg, new_form = ddi.apply_exist_gener(selected_var,
                                                      q_vars, selected_term, index_terms, form,
                                                      index_terms)
-
-            # print(f'new_form: {new_form}')
-            # r, msg, new_form = self.apply_gen_exist_rule(quant_symbol, selected_var, q_vars, selected_term, form,
-            #                                              terms_to_replace)
-            # print(f'new_form2: {new_form}')
-            quant_symbol = fms.GlobalConstants.ex
-            new_form = self.continue_to_update(quant_symbol, new_form, selected_var)
-            # print(f'new_form3: {new_form}')
-            return r, user_input, msg, new_form
+            if not r:
+                return r, msg, user_input, new_form
+            else:
+                quant_symbol = fms.GlobalConstants.ex
+                new_form = self.continue_to_update(quant_symbol, new_form, selected_var)
+                # print(f'new_form3: {new_form}')
+                return r, msg, user_input, new_form
 
     # -----------------------------------------------------------------------------
     # def apply_gen_exist_rule(self, quant_symbol, selected_var, q_vars, term_selected, form, terms_to_replace):
@@ -1195,31 +1306,6 @@ class Prover():
     #
     #     return r, msg, user_input, new_line
 
-    # -----------------------------------------------------------------------------
-    def apply_predicate_equivalence_rule2(self, rule, form):
-
-        # To user predicates rules, just one line must be selected
-        rule_name = rule.getName()
-        rule_nick = rule.getNick()
-
-        # index = selected_proof_line_indexes[0]  # just one line can be selected
-        # selected_line = proof_line_list[index]
-        # # print(f'selected_line: {selected_line} - type: {type(selected_line)}')
-        # form = self.remove_rule_reference(selected_line)
-        # print(f'form: {form} - type: {type(form)}')
-
-        if (rule_nick == 'DME_rl') or (rule_nick == 'DMU_rl'):
-            r, msg, new_line = self.apply_deMorgan_right_to_left(form, rule_name)
-        elif (rule_nick == 'DME_lr') or (rule_nick == 'DMU_lr'):
-            r, msg, new_line = self.apply_deMorgan_left_to_right(form, rule_name)
-        else:
-            msg = 'THE SELECTED RULE CAN NOT BE \nAPPLIED TO PREDICATES. \nTHE RULE <' \
-                  + rule_name + '>\nCAN NOT BE APPLIED.' + '\nPLEASE, TRY IT AGAIN.'
-            new_line = ' '
-            r = False
-
-        # user_input = 0
-        return r, msg,  new_line
 
 
     # # -----------------------------------------------------------------------------
@@ -1229,8 +1315,9 @@ class Prover():
                 r, msg, new_line = pred.applyPredRule(form)
                 return r, msg, new_line
             else:
-                msg = 'THE FORMULA IN THE SCOPE OF \nQUANTIFIER(S) DO NOT START WITH "~". \nTHE RULE <' \
-                      + rule_name + '>\nCAN NOT BE APPLIED.' + '\n PLEASE, TRY IT AGAIN.'
+                msg = 'The formula in the scope of \nquantifier(s) do not star with "~". ' \
+                      '\nThe rule <'+ rule_name + '>\ncannot be applied.' + \
+                      '\n Please, try again.'
                 return False, msg, None
         elif type(form) is fms.Form1:
             opnd1 = form.getOpnd1()
@@ -1241,8 +1328,8 @@ class Prover():
             else:
                 return r, msg, None
         else:
-            msg = 'THE FORMULA IS NOT A fof. \nTHE RULE <' \
-                  + rule_name + '>\nCAN NOT BE APPLIED.' + '\n PLEASE, TRY IT AGAIN.'
+            msg = 'The formula is not a FOF. \nThe rule <' \
+                  + rule_name + '>\ncannot be applied.' + '\n Please, try again.'
             return False, msg, None
 
     # # -----------------------------------------------------------------------------
@@ -1264,40 +1351,36 @@ class Prover():
                 else:
                     return r, msg, None
         else:
-            msg = 'THE FORMULA IS NOT A NEGATION OF A Fof. \nTHE RULE <' + rule_name + \
-                  '>\nCAN NOT BE APPLIED.' + '\n PLEASE, TRY IT AGAIN.'
+            msg = 'The formula is not a negationa a a FOF. \nThe rule <' + rule_name + \
+                  '>\ncannot be applied.' + '\n Please, try again.'
             return False, msg, form
 
     # -----------------------------------------------------------------------------
 
     def check_for_success(self, new_line):
 
-        # if self.conclusion == fms.GlobalConstants.cnf:
-        #     if self.checkForCNF(new_line):
-        #         return True # If the formula is in a normal form, returns
-        #         # else continue the proving process
-        # if self.conclusion == fms.GlobalConstants.dnf:
-        #     if self.checkForDNF(new_line):
-        #         return True # If the formula is in a normal form, returns
-        #         # else continue the proving process
+        tls = UsefullTools()
 
-
-        if new_line == self.argument_conclusion:
+        conclusion = self.argument_conclusion
+        if conclusion == fms.GlobalConstants.cnf:
+            r = tls.is_cnf(new_line)
+        elif conclusion == fms.GlobalConstants.dnf:
+            r = tls.is_dnf(new_line)
+        else:
+            # print(f"new_line: {new_line} - type: {type(new_line)}")
+            # print(f"conclusion: {conclusion} - type: {type(conclusion)}")
+            r = new_line == conclusion
+        if (r):
             if len(self.list_of_hypothesis) != 0:
                 error_message = 'You got to the conclusion, \n\n' \
                                 'but did not remove the last Temporary Hypothesis yet.\n\n' \
                                 'It must be removed first!'
                 return False, error_message
             else:
-                #         self.stopClock()
-                #         self.saveSolution('FINAL')
-                #         # self.printProofTable()
-                #         # print('solution saved')
-                #         # self.loadSolution()
-                message = 'DEMONSTRATION ENDED SUCCESSFULLY.'
-                return True, message
+                return True, 'DEMONSTRATION ENDED SUCCESSFULLY!'
         else:
-            return False, ''
+            return False, ''  # Proof not ended
+
 
     # -----------------------------------------------------------------------------
     def print_proof_lines(self, proof_lines):
@@ -1338,8 +1421,9 @@ class UsefullTools():
         # changes original occurrences of '<->
         input_string = input_string.replace('->', ' ' + cnt.c_if + ' ')  # Insert a space before and after '->'
         input_string = input_string.replace(',', ' , ')  # Insert a space before and after ',' in a list of premisses
-        input_string = input_string.replace('T', cnt.true)  # Tautology
-        input_string = input_string.replace('⊥', cnt.false)  # Contradiction
+        # input_string = input_string.replace('T', cnt.true)  # Tautology
+        # input_string = input_string.replace('⊥', cnt.false)  # Contradiction
+        input_string = input_string.replace('eqv', cnt.eqv)  # EQV
         input_string = input_string.replace('cnf', cnt.cnf)  # CNF
         input_string = input_string.replace('dnf', cnt.dnf)  # DNF
         for c in cnt.list_of_functs:
@@ -1354,15 +1438,15 @@ class UsefullTools():
             options += [str(form) + ' - AT POS ' + str(ind)]
         return options
 
-    # # -----------------------------------------------------------------------------
-    # def check_number_of_selected_lines(self, rule, selected_proof_lines):
-    #     if len(rule.getPremis()) != len(selected_proof_lines):
-    #         return False, "Wrong number of selected proof_lines."
-    #     else:
-    #         return True, ''
+        # # -----------------------------------------------------------------------------
+        # def check_number_of_selected_lines(self, rule, selected_proof_lines):
+        #     if len(rule.getPremis()) != len(selected_proof_lines):
+        #         return False, "Wrong number of selected proof_lines."
+        #     else:
+        #         return True, ''
 
-    # # -----------------------------------------------------------------------------
-    # def check_selected_lines(self, selected_proof_lines, forbidden_lines):
+        # # -----------------------------------------------------------------------------
+        # def check_selected_lines(self, selected_proof_lines, forbidden_lines):
         '''
         Check if just one line was selected and if it is not forbidden
 
@@ -1481,7 +1565,7 @@ class UsefullTools():
 
         return sub_list, ind_in, ind_f
 
-    # -----------------------------------------------------------------------------
+    # # -----------------------------------------------------------------------------
     def input_formula(self,input_formula):
         """
 
@@ -1491,6 +1575,7 @@ class UsefullTools():
         r, msg, prepared_new_formula = self.prepare_new_formula(new_formula)
 
         return r, msg, prepared_new_formula
+
 
     # -----------------------------------------------------------------------------
     def prepare_new_formula(self, new_formula):
@@ -1575,7 +1660,7 @@ class UsefullTools():
     def import_list(self, path, filename):
         '''
         Imports a list of problems (arguments) from .TXT file
-        Premisses must be separated by by SPACE-COMMA-SPACE.
+        Premisses must be separated by SPACE-COMMA-SPACE.
         Conjunction operator is & and disjunction operator is | (with spaces before and after them)
         The last proposition must be the conclusion
 
@@ -1625,7 +1710,7 @@ class UsefullTools():
         lines = [l for l in lines if l[0] != '#']
         return lines
 
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
 
     def is_literal(self, formula):
         if type(formula) is fms.Form:  # p
@@ -1643,13 +1728,12 @@ class UsefullTools():
 
         # print(f"Formula: {formula} - type: {type(formula)}")
         l_conj = self.get_conjunct_list(formula)
-
-        # l = tls.is_cnf(ind_form_list)
-        # for i in l_conj:
-        #     print(f"i: {i}")
+        # print(f"l_conj: {l_conj}")
 
         if len(l_conj) == 1:
             if self.is_literal(l_conj[0]):
+                return True
+            elif self.is_mult_disj(l_conj[0]):
                 return True
             else:
                 return False
@@ -1660,7 +1744,8 @@ class UsefullTools():
             l_disj = self.get_disjunct_list(conj)
             for d in l_disj:
                 # print(f" d: {d}")
-                if self.is_literal(d): r = True and r
+                if self.is_literal(d):
+                    r = True and r
                 else:
                     l_conj_d = self.get_conjunct_list(d)
                     # print(f" l_conj_d: {l_conj_d}")
@@ -1678,12 +1763,10 @@ class UsefullTools():
         # print(f"Formula: {formula} - type: {type(formula)}")
         l_disj = self.get_disjunct_list(formula)
 
-        # l = tls.is_cnf(ind_form_list)
-        # for i in l_disj:
-        #     print(f"i: {i}")
-
         if len(l_disj) == 1:
             if self.is_literal(l_disj[0]):
+                return True
+            elif self.is_mult_conj(l_disj[0]):
                 return True
             else:
                 return False
@@ -1707,9 +1790,7 @@ class UsefullTools():
 
         return r
 
-
-
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
     def get_conjunct_list(self, form):
 
         if self.is_literal(form):
@@ -1726,13 +1807,13 @@ class UsefullTools():
                 # print(f"l1: {l1}")
                 l2 = self.get_conjunct_list(opnd2)
                 # print(f"l2: {l2}")
-                return l1+l2
+                return l1 + l2
             else:
                 return [form]
         else:
             return []
 
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
     def get_disjunct_list(self, form):
 
         if self.is_literal(form):
@@ -1749,16 +1830,65 @@ class UsefullTools():
                 # print(f"l1: {l1}")
                 l2 = self.get_disjunct_list(opnd2)
                 # print(f"l2: {l2}")
-                return l1+l2
+                return l1 + l2
             else:
                 return [form]
         else:
             return []
 
+ # -----------------------------------------------------------------------------
+    def is_mult_disj(self, form):
+        # form must be of type Form2
+
+        if self.is_literal(form):
+            return True
+        if type(form) is fms.Form2:
+            if form.getOper() == fms.GlobalConstants.c_or:
+                opnd1 = form.getOpnd1()
+                # print(f"opnd1: {opnd1}")
+                opnd2 = form.getOpnd2()
+                # print(f"opnd2: {opnd2}")
+                r1 =  self.is_mult_disj(opnd1)
+                if r1:
+                    r2 =  self.is_mult_disj(opnd2)
+                    if r2: return True
+                    else: return False
+                else:
+                    return False
+            else:
+                return False
+        else:
+            return False
+
+
+ # -----------------------------------------------------------------------------
+    def is_mult_conj(self, form):
+        # form must be of type Form2
+
+        if self.is_literal(form):
+            return True
+        if type(form) is fms.Form2:
+            if form.getOper() == fms.GlobalConstants.c_and:
+                opnd1 = form.getOpnd1()
+                # print(f"opnd1: {opnd1}")
+                opnd2 = form.getOpnd2()
+                # print(f"opnd2: {opnd2}")
+                r1 =  self.is_mult_conj(opnd1)
+                if r1:
+                    r2 =  self.is_mult_conj(opnd2)
+                    if r2: return True
+                    else: return False
+                else:
+                    return False
+            else:
+                return False
+        else:
+            return False
+
+
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
-
     tls = UsefullTools()
     pv = Prover()
 
@@ -1768,21 +1898,23 @@ if __name__ == '__main__':
     formula3 = "0 - p ^ (p ^ r) ^ q ⊢ CNF"
     formula4 = "0 - p ^ (p v (r ^ s)) ^ (q v s) ⊢ CNF"
     formula5 = "0 - p v (p ^ r) v (q ^ s) ⊢ DNF"
-    formula6 = "0 - ~p ∨ ~q ⊢ DNF"
+    formula6 = "0 - ~p ∨ ~q ⊢ CNF"
+    formula7 = "0 - ~p v q  ⊢ CNF "
+    formula8 = "0 - (~p v q) v (~q v p)  ⊢ CNF "
+    formula9 = "0 - ~p ^ q  ⊢ CNF "
+    formula10 = "0 - (~p ^ q) ^ (~q ^ p)  ⊢ CNF "
 
-    pv.input_an_argument(formula6)
+    pv.input_an_argument(formula7)
     nformula = pv.remove_rule_reference(pv.argument_premisses[0])
 
     # ind_form_list = fms.index_form(0, nformula)
     print(f"premiss: {nformula}")
     # print(f"ind_form_list: {ind_form_list}")
 
-
-
-    r = tls.is_dnf(nformula)
+    r = tls.is_cnf(nformula)
+    # r = tls.is_mult_disj(nformula)
     print(f"r: {r}")
 
     # l = tls.get_disjunct_list(nformula)
     # for i in l:
     #     print(f"i: {i}")
-

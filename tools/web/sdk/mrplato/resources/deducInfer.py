@@ -27,7 +27,7 @@ from web.sdk.mrplato.resources import forms as fms
 #-----------------------------------------------------------------------------
 def apply_inference_rule(rule,lines):
     ''' Substitui as variáveis do mapeamento na conclusao da regra  '''
-
+    #
     # for l in lines:
     #     print(f'line: {l} - type: {type(l)}')
     #
@@ -175,7 +175,7 @@ def check_exist_partic_restrictions(quant_var, new_term, proof_lines):
     #     return True, ' '
     # elif not r:
     if not r:
-        error_msg = 'The new term "' + new_term + '"  ' \
+        error_msg = 'The term "' + new_term + '"  ' \
                      '\nhas been used before.\n\n' \
                      'Existential particularization' \
                      '\ncannot be applied!'

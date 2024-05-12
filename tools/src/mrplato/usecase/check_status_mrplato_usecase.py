@@ -16,12 +16,13 @@ class CheckStatusMrplatoUsecase(UsecaseInterface):
 
     async def execute(self, input: InputCheckStatusMrplatoUsecaseDto, response):
 
-
         session_data: MrplatoSessionDto = await self.session.verify(session_key=input.session_key, response=response)
- 
+
+
         prover_instance = pickle.loads(session_data.prover)
         
         service = self.service.get_current_status_prover(prover_instance, input.problem)
+
 
         output = OutputCheckStatusMrplatoUsecaseDto(
             conclusion = service["conclusion"],

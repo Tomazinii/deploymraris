@@ -40,7 +40,8 @@ class ProblemRepository(ProblemRepositoryInterface):
                     list_name=element.list_name,
                     updated_at=element.updated_at,
                 )
-                decoded_data = [bytes.fromhex(item[2:]).decode('utf-8') for item in element.list_problem]
+                decoded_data = element.list_problem
+                # decoded_data = [bytes.fromhex(item[2:]).decode('utf-8') for item in element.list_problem if isinstance(item, bytes)]
                 problem = Problem(props=props)
                 problem.set_slug(Slug(element.list_name))
                 problem.set_list_problem(decoded_data)
