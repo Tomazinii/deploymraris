@@ -7,7 +7,7 @@ Created on Wed Apr 21 07:09:47 2021
 """
 import copy
 
-# from prettytable import PrettyTable
+#from prettytable import PrettyTable
 from itertools import permutations
 
 
@@ -140,7 +140,7 @@ def substitue(dicCor, form):
         r: an error code (True or False)
         msg: an error message
         nForm: a new Form* object with original
-        variables replaced, according to mapping.
+        variables replaced, according with mapping.
     '''
 
     # print('substitue')
@@ -233,9 +233,9 @@ def mappingGenerate(dic,premisses,lines):
         return r, msg, dic
 
 #----------------------------------------------------------------------------
-# f01 = fms.Form('A')
+# f01 = fms.Form('p')
 # f02 = fms.Form('a')
-# f03 = fms.Form('B')
+# f03 = fms.Form('q')
 # f04 = fms.Form('b')
 
 # f11 = fms.Form1(fms.GlobalConstants.c_not,f01)
@@ -426,61 +426,61 @@ def createEquRules():
 
     # Properties of conjuction
 
-    ir_idem_c = { 'Idempotência_c': (('A',fms.GlobalConstants.c_and,'A'),'A' )}
-    ir_com_c = { 'Comutação_c': (('A',fms.GlobalConstants.c_and,'B'),('B',fms.GlobalConstants.c_and,'A') )}
-    ir_ass_c = { 'Associação_c': (('A',fms.GlobalConstants.c_and,('B',fms.GlobalConstants.c_and,'C')),(('A',fms.GlobalConstants.c_and,'B'),fms.GlobalConstants.c_and,'C') )}
-    ir_ident_ct = {'Identidade_ct': (('A', fms.GlobalConstants.c_and,'⊤'), 'A')}
-    ir_ident_cc = {'Identidade_cc': (('A', fms.GlobalConstants.c_and,'⊥'), '⊥')}
+    ir_idem_c = { 'Idempotência_c': (('p',fms.GlobalConstants.c_and,'p'),'p' )}
+    ir_com_c = { 'Comutação_c': (('p',fms.GlobalConstants.c_and,'q'),('q',fms.GlobalConstants.c_and,'p') )}
+    ir_ass_c = { 'Associação_c': (('p',fms.GlobalConstants.c_and,('q',fms.GlobalConstants.c_and,'r')),(('p',fms.GlobalConstants.c_and,'q'),fms.GlobalConstants.c_and,'r') )}
+    ir_ident_ct = {'Identidade_ct': (('p', fms.GlobalConstants.c_and,'⊤'), 'p')}
+    ir_ident_cc = {'Identidade_cc': (('p', fms.GlobalConstants.c_and,'⊥'), '⊥')}
 
 
     # Properties of disjuction
 
-    ir_idem_d = {'Idempotência_d': (('A', fms.GlobalConstants.c_or, 'A'), 'A')}
-    ir_com_d = {'Comutação_d': (('A', fms.GlobalConstants.c_or, 'B'), ('B', fms.GlobalConstants.c_or, 'A'))}
-    ir_ass_d = {'Associação_d': (('A', fms.GlobalConstants.c_or, ('B', fms.GlobalConstants.c_or, 'C')), (('A', fms.GlobalConstants.c_or, 'B'), fms.GlobalConstants.c_or, 'C'))}
-    ir_ident_dt = {'Identidade_dt': (('A', fms.GlobalConstants.c_or,'⊤'), '⊤')}
-    ir_ident_dc = {'Identidade_dc': (('A', fms.GlobalConstants.c_or,'⊥'), 'A')}
+    ir_idem_d = {'Idempotência_d': (('p', fms.GlobalConstants.c_or, 'p'), 'p')}
+    ir_com_d = {'Comutação_d': (('p', fms.GlobalConstants.c_or, 'q'), ('q', fms.GlobalConstants.c_or, 'p'))}
+    ir_ass_d = {'Associação_d': (('p', fms.GlobalConstants.c_or, ('q', fms.GlobalConstants.c_or, 'r')), (('p', fms.GlobalConstants.c_or, 'q'), fms.GlobalConstants.c_or, 'r'))}
+    ir_ident_dt = {'Identidade_dt': (('p', fms.GlobalConstants.c_or,'⊤'), '⊤')}
+    ir_ident_dc = {'Identidade_dc': (('p', fms.GlobalConstants.c_or,'⊥'), 'p')}
 
 
     # Properties of conjuction and disjuction
 
-    ir_distr_c = {'Distr._c': (('A', fms.GlobalConstants.c_and, ('B', fms.GlobalConstants.c_or, 'C')), (('A', fms.GlobalConstants.c_and, 'B'), fms.GlobalConstants.c_or, ('A', fms.GlobalConstants.c_and, 'C')))}
-    ir_distr_c2 = {'Distr._c2': ( (('A', fms.GlobalConstants.c_and, 'B'), fms.GlobalConstants.c_or, ('C', fms.GlobalConstants.c_and, 's')), (('A', fms.GlobalConstants.c_or, ('C', fms.GlobalConstants.c_and, 's')), fms.GlobalConstants.c_and,('B', fms.GlobalConstants.c_or, ('C', fms.GlobalConstants.c_and, 's'))))}
-    ir_distr_d = {'Distr._d': (('A', fms.GlobalConstants.c_or, ('B', fms.GlobalConstants.c_and, 'C')), (('A', fms.GlobalConstants.c_or, 'B'), fms.GlobalConstants.c_and, ('A', fms.GlobalConstants.c_or, 'C')))}
-    ir_distr_d2 = {'Distr._d2': ( (('A', fms.GlobalConstants.c_or, 'B'), fms.GlobalConstants.c_and, ('C', fms.GlobalConstants.c_or, 's')), (('A', fms.GlobalConstants.c_and, ('C', fms.GlobalConstants.c_or, 's')), fms.GlobalConstants.c_or,('B', fms.GlobalConstants.c_and, ('C', fms.GlobalConstants.c_or, 's'))))}
-    ir_abs_c = {'Absorção_c': (('A', fms.GlobalConstants.c_and, ('A', fms.GlobalConstants.c_or, 'B')), 'A')}
-    ir_abs_d = {'Absorção_d': (('A', fms.GlobalConstants.c_or, ('A', fms.GlobalConstants.c_and, 'B')), 'A')}
-    ir_dm_c = {'De Morgan_c': ((fms.GlobalConstants.c_not,('A',fms.GlobalConstants.c_and,'B')),((fms.GlobalConstants.c_not,'A'),fms.GlobalConstants.c_or,(fms.GlobalConstants.c_not,'B')))}
-    ir_dm_d = {'De Morgan_d': ((fms.GlobalConstants.c_not,('A',fms.GlobalConstants.c_or,'B')),((fms.GlobalConstants.c_not,'A'),fms.GlobalConstants.c_and,(fms.GlobalConstants.c_not,'B')))}
+    ir_distr_c = {'Distr._c': (('p', fms.GlobalConstants.c_and, ('q', fms.GlobalConstants.c_or, 'r')), (('p', fms.GlobalConstants.c_and, 'q'), fms.GlobalConstants.c_or, ('p', fms.GlobalConstants.c_and, 'r')))}
+    ir_distr_c2 = {'Distr._c2': ( (('p', fms.GlobalConstants.c_and, 'q'), fms.GlobalConstants.c_or, ('r', fms.GlobalConstants.c_and, 's')), (('p', fms.GlobalConstants.c_or, ('r', fms.GlobalConstants.c_and, 's')), fms.GlobalConstants.c_and,('q', fms.GlobalConstants.c_or, ('r', fms.GlobalConstants.c_and, 's'))))}
+    ir_distr_d = {'Distr._d': (('p', fms.GlobalConstants.c_or, ('q', fms.GlobalConstants.c_and, 'r')), (('p', fms.GlobalConstants.c_or, 'q'), fms.GlobalConstants.c_and, ('p', fms.GlobalConstants.c_or, 'r')))}
+    ir_distr_d2 = {'Distr._d2': ( (('p', fms.GlobalConstants.c_or, 'q'), fms.GlobalConstants.c_and, ('r', fms.GlobalConstants.c_or, 's')), (('p', fms.GlobalConstants.c_and, ('r', fms.GlobalConstants.c_or, 's')), fms.GlobalConstants.c_or,('q', fms.GlobalConstants.c_and, ('r', fms.GlobalConstants.c_or, 's'))))}
+    ir_abs_c = {'Absorção_c': (('p', fms.GlobalConstants.c_and, ('p', fms.GlobalConstants.c_or, 'q')), 'p')}
+    ir_abs_d = {'Absorção_d': (('p', fms.GlobalConstants.c_or, ('p', fms.GlobalConstants.c_and, 'q')), 'p')}
+    ir_dm_c = {'De Morgan_c': ((fms.GlobalConstants.c_not,('p',fms.GlobalConstants.c_and,'q')),((fms.GlobalConstants.c_not,'p'),fms.GlobalConstants.c_or,(fms.GlobalConstants.c_not,'q')))}
+    ir_dm_d = {'De Morgan_d': ((fms.GlobalConstants.c_not,('p',fms.GlobalConstants.c_or,'q')),((fms.GlobalConstants.c_not,'p'),fms.GlobalConstants.c_and,(fms.GlobalConstants.c_not,'q')))}
 
 
     # Properties of conditional
 
 
-    ir_dcond = {'Condicional': (('A', fms.GlobalConstants.c_if, 'B'),((fms.GlobalConstants.c_not, 'A'), fms.GlobalConstants.c_or, 'B'))}
-    ir_ncond = {'Neg. condicional': ((fms.GlobalConstants.c_not, ('A', fms.GlobalConstants.c_if, 'B')), ('A', fms.GlobalConstants.c_and, (fms.GlobalConstants.c_not, 'B')))}
-    ir_cp = {'Contrapositiva': (('A', fms.GlobalConstants.c_if, 'B'), ((fms.GlobalConstants.c_not, 'B'), fms.GlobalConstants.c_if, (fms.GlobalConstants.c_not, 'A')))}
-    ir_distr_cond_c = {'Distr._cc': (('A', fms.GlobalConstants.c_if, ('B', fms.GlobalConstants.c_and, 'C')), (('A', fms.GlobalConstants.c_if, 'B'), fms.GlobalConstants.c_and, ('A', fms.GlobalConstants.c_if, 'C')))}
-    ir_distr_DEF_COND = {'Distr._dc': (('A', fms.GlobalConstants.c_if, ('B', fms.GlobalConstants.c_or, 'C')), (('A', fms.GlobalConstants.c_if, 'B'), fms.GlobalConstants.c_or, ('A', fms.GlobalConstants.c_if, 'C')))}
-    ir_abs_cond = {'Absorção_cd': (('A', fms.GlobalConstants.c_if, ('A', fms.GlobalConstants.c_and, 'B')), ('A', fms.GlobalConstants.c_if, 'B'))}
-    ir_expImp = {'Exportação-importação.': ((('A', fms.GlobalConstants.c_and, 'B'), fms.GlobalConstants.c_if, 'C'), ('A', fms.GlobalConstants.c_if, ('B', fms.GlobalConstants.c_if, 'C')))}
-    ir_tp = {'Troca premissas': (('A', fms.GlobalConstants.c_if, ('B', fms.GlobalConstants.c_if, 'C')), ('B', fms.GlobalConstants.c_if, ('A', fms.GlobalConstants.c_if, 'C')))}
+    ir_dcond = {'Condicional': (('p', fms.GlobalConstants.c_if, 'q'),((fms.GlobalConstants.c_not, 'p'), fms.GlobalConstants.c_or, 'q'))}
+    ir_ncond = {'Neg. condicional': ((fms.GlobalConstants.c_not, ('p', fms.GlobalConstants.c_if, 'q')), ('p', fms.GlobalConstants.c_and, (fms.GlobalConstants.c_not, 'q')))}
+    ir_cp = {'Contrapositiva': (('p', fms.GlobalConstants.c_if, 'q'), ((fms.GlobalConstants.c_not, 'q'), fms.GlobalConstants.c_if, (fms.GlobalConstants.c_not, 'p')))}
+    ir_distr_cond_c = {'Distr._cc': (('p', fms.GlobalConstants.c_if, ('q', fms.GlobalConstants.c_and, 'r')), (('p', fms.GlobalConstants.c_if, 'q'), fms.GlobalConstants.c_and, ('p', fms.GlobalConstants.c_if, 'r')))}
+    ir_distr_DEF_COND = {'Distr._dc': (('p', fms.GlobalConstants.c_if, ('q', fms.GlobalConstants.c_or, 'r')), (('p', fms.GlobalConstants.c_if, 'q'), fms.GlobalConstants.c_or, ('p', fms.GlobalConstants.c_if, 'r')))}
+    ir_abs_cond = {'Absorção_cd': (('p', fms.GlobalConstants.c_if, ('p', fms.GlobalConstants.c_and, 'q')), ('p', fms.GlobalConstants.c_if, 'q'))}
+    ir_expImp = {'Exportação-importação.': ((('p', fms.GlobalConstants.c_and, 'q'), fms.GlobalConstants.c_if, 'r'), ('p', fms.GlobalConstants.c_if, ('q', fms.GlobalConstants.c_if, 'r')))}
+    ir_tp = {'Troca premissas': (('p', fms.GlobalConstants.c_if, ('q', fms.GlobalConstants.c_if, 'r')), ('q', fms.GlobalConstants.c_if, ('p', fms.GlobalConstants.c_if, 'r')))}
 
 
     # Properties of Bicondicional
 
-    ir_Bicondicional1 = { 'Bicondicional_1': (('A',fms.GlobalConstants.c_iff,'B'),(('A',fms.GlobalConstants.c_if,'B'),fms.GlobalConstants.c_and,('B',fms.GlobalConstants.c_if,'A')))}
-    ir_Bicondicional2 = { 'Bicondicional_2': (('A',fms.GlobalConstants.c_iff,'B'),(((fms.GlobalConstants.c_not,'A'),fms.GlobalConstants.c_or, 'B'),fms.GlobalConstants.c_and ,((fms.GlobalConstants.c_not,'B'),fms.GlobalConstants.c_or, 'A')))}
-    ir_Bicondicional3 = { 'Bicondicional_3': (('A',fms.GlobalConstants.c_iff,'B'),(('A',fms.GlobalConstants.c_and, 'B'),fms.GlobalConstants.c_or, ((fms.GlobalConstants.c_not,'A'),fms.GlobalConstants.c_and, (fms.GlobalConstants.c_not,'B'))))}
+    ir_Bicondicional1 = { 'Bicondicional_1': (('p',fms.GlobalConstants.c_iff,'q'),(('p',fms.GlobalConstants.c_if,'q'),fms.GlobalConstants.c_and,('q',fms.GlobalConstants.c_if,'p')))}
+    ir_Bicondicional2 = { 'Bicondicional_2': (('p',fms.GlobalConstants.c_iff,'q'),(((fms.GlobalConstants.c_not,'p'),fms.GlobalConstants.c_or, 'q'),fms.GlobalConstants.c_and ,((fms.GlobalConstants.c_not,'q'),fms.GlobalConstants.c_or, 'p')))}
+    ir_Bicondicional3 = { 'Bicondicional_3': (('p',fms.GlobalConstants.c_iff,'q'),(('p',fms.GlobalConstants.c_and, 'q'),fms.GlobalConstants.c_or, ((fms.GlobalConstants.c_not,'p'),fms.GlobalConstants.c_and, (fms.GlobalConstants.c_not,'q'))))}
 
     # Equivalence rules
 
-    ir_dn = {'Dupla negação': ((fms.GlobalConstants.c_not, (fms.GlobalConstants.c_not, 'A')), 'A' )}
-    ir_compl1 = {'Complemento_1': (('A', fms.GlobalConstants.c_or, (fms.GlobalConstants.c_not, 'A')), '⊤')}
-    ir_compl2 = {'Complemento_2': (('A', fms.GlobalConstants.c_and, (fms.GlobalConstants.c_not, 'A')), '⊥')}
+    ir_dn = {'Dupla negação': ((fms.GlobalConstants.c_not, (fms.GlobalConstants.c_not, 'p')), 'p' )}
+    ir_compl1 = {'Complemento_1': (('p', fms.GlobalConstants.c_or, (fms.GlobalConstants.c_not, 'p')), '⊤')}
+    ir_compl2 = {'Complemento_2': (('p', fms.GlobalConstants.c_and, (fms.GlobalConstants.c_not, 'p')), '⊥')}
     ir_compl3 = {'Complemento_3': ((fms.GlobalConstants.c_not,  '⊥'), '⊤')}
     ir_compl4 = {'Complemento_4': ((fms.GlobalConstants.c_not, '⊤'), '⊥')}
-    ir_Clavius = {'Clavius': ('A', ((fms.GlobalConstants.c_not, 'A'),fms.GlobalConstants.c_if,'A'))}
+    ir_Clavius = {'Clavius': ('p', ((fms.GlobalConstants.c_not, 'p'),fms.GlobalConstants.c_if,'p'))}
 
 
 

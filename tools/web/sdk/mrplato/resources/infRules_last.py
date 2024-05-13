@@ -8,8 +8,8 @@ Created on Tue Apr 20 12:31:21 2021
 
 #from prettytable import PrettyTable
 
-from web.sdk.mrplato.resources import forms as fms
 
+from web.sdk.mrplato.resources import forms as fms
 #-----------------------------------------------------------------------------        
 class InferRule(): 
     '''
@@ -49,7 +49,7 @@ class InferRule():
     def getName(self): 
             return self.name
 
-    def setNick(self, nick):
+    def setNick(self, name):
             self.nick = nick
 
     def getNick(self):
@@ -166,34 +166,34 @@ def createInfRules():
 
     # These three lines are not rules in fact, but they are treated as if they are.
     # They are used to introduce and to remove hypothesis.
-    ir_adh = {'Ad. Hipótese': (['A'], ('A'))}
-    ir_rmh = {'Rem. Hipótese': (['A'], ('A',fms.GlobalConstants.c_if,'B'))}
-    ir_absd = {'Red. Absurdo': (['A'], (fms.GlobalConstants.c_not,'A'))}
+    ir_adh = {'Ad. Hipótese': (['p'], ('p'))}
+    ir_rmh = {'Rem. Hipótese': (['p'], ('p',fms.GlobalConstants.c_if,'q'))}
+    ir_absd = {'Red. Absurdo': (['p'], (fms.GlobalConstants.c_not,'p'))}
     ###########################################################################
 
-    ir_ad1 = { 'Adição_1': (['A'],('A',fms.GlobalConstants.c_or,'B') )}
-    ir_ad2 = { 'Adição_2': (['A'],('B',fms.GlobalConstants.c_or,'A') )}
+    ir_ad1 = { 'Adição_1': (['p'],('p',fms.GlobalConstants.c_or,'q') )}
+    ir_ad2 = { 'Adição_2': (['p'],('q',fms.GlobalConstants.c_or,'p') )}
     
-    ir_simp1 = {'Simplificação_1':  ([('A', fms.GlobalConstants.c_and,'B')],'A')}
-    ir_simp2 = {'Simplificação_2':  ([('A', fms.GlobalConstants.c_and,'B')],'B')}
+    ir_simp1 = {'Simplificação_1':  ([('p', fms.GlobalConstants.c_and,'q')],'p')}
+    ir_simp2 = {'Simplificação_2':  ([('p', fms.GlobalConstants.c_and,'q')],'q')}
 
-    ir_conj1 = {'Conjunção_1':  (['A','B'],('A', fms.GlobalConstants.c_and,'B'))}
-    ir_conj2 = {'Conjunção_2':  (['A','B'],('B',fms.GlobalConstants.c_and,'A'))}
+    ir_conj1 = {'Conjunção_1':  (['p','q'],('p', fms.GlobalConstants.c_and,'q'))}
+    ir_conj2 = {'Conjunção_2':  (['p','q'],('q',fms.GlobalConstants.c_and,'p'))}
     
-    ir_abs = {'Absorção':  ([('A',fms.GlobalConstants.c_if,'B')],('A',fms.GlobalConstants.c_if,('A',fms.GlobalConstants.c_if,'B')))}
+    ir_abs = {'Absorção':  ([('p',fms.GlobalConstants.c_if,'q')],('p',fms.GlobalConstants.c_if,('p',fms.GlobalConstants.c_if,'q')))}
     
-    ir_mp = {'Modus ponens':  ([('A',fms.GlobalConstants.c_if,'B'),'A'],'B')}
+    ir_mp = {'Modus ponens':  ([('p',fms.GlobalConstants.c_if,'q'),'p'],'q')}
     
-    ir_mt = {'Modus tollens':  ([('A',fms.GlobalConstants.c_if,'B'),(fms.GlobalConstants.c_not,'B')],(fms.GlobalConstants.c_not,'A'))}
+    ir_mt = {'Modus tollens':  ([('p',fms.GlobalConstants.c_if,'q'),(fms.GlobalConstants.c_not,'q')],(fms.GlobalConstants.c_not,'p'))}
     
-    ir_sd1 = {'Sil. disj._1':  ([('A',fms.GlobalConstants.c_or,'B'),(fms.GlobalConstants.c_not,'A')],('B'))}
-    ir_sd2 = {'Sil. disj._2':  ([('A',fms.GlobalConstants.c_or,'B'),(fms.GlobalConstants.c_not,'B')],('A'))}
+    ir_sd1 = {'Sil. disj._1':  ([('p',fms.GlobalConstants.c_or,'q'),(fms.GlobalConstants.c_not,'p')],('q'))}
+    ir_sd2 = {'Sil. disj._2':  ([('p',fms.GlobalConstants.c_or,'q'),(fms.GlobalConstants.c_not,'q')],('p'))}
     
-    ir_sh = {'Sil. hipot.':  ([('A',fms.GlobalConstants.c_if,'B'),('B',fms.GlobalConstants.c_if,'C')],('A',fms.GlobalConstants.c_if,'C'))}
+    ir_sh = {'Sil. hipot.':  ([('p',fms.GlobalConstants.c_if,'q'),('q',fms.GlobalConstants.c_if,'r')],('p',fms.GlobalConstants.c_if,'r'))}
     
-    ir_dc = {'Dil. constr.':  ([('A',fms.GlobalConstants.c_if,'B'),('C',fms.GlobalConstants.c_if,'D'),('A',fms.GlobalConstants.c_or,'C')],('B',fms.GlobalConstants.c_or,'D'))}
+    ir_dc = {'Dil. constr.':  ([('p',fms.GlobalConstants.c_if,'q'),('r',fms.GlobalConstants.c_if,'s'),('p',fms.GlobalConstants.c_or,'r')],('q',fms.GlobalConstants.c_or,'s'))}
     
-    ir_dd = {'Dil. destr.':  ([('A',fms.GlobalConstants.c_if,'B'),('C',fms.GlobalConstants.c_if,'D'),((fms.GlobalConstants.c_not,'B'),fms.GlobalConstants.c_or,(fms.GlobalConstants.c_not,'D'))],((fms.GlobalConstants.c_not,'A'),fms.GlobalConstants.c_or,(fms.GlobalConstants.c_not, 'C')))}
+    ir_dd = {'Dil. destr.':  ([('p',fms.GlobalConstants.c_if,'q'),('r',fms.GlobalConstants.c_if,'s'),((fms.GlobalConstants.c_not,'q'),fms.GlobalConstants.c_or,(fms.GlobalConstants.c_not,'s'))],((fms.GlobalConstants.c_not,'p'),fms.GlobalConstants.c_or,(fms.GlobalConstants.c_not, 'r')))}
 
     lInferRules = [('ADHYP', 'Ad. Hipótese', ir_adh),
                 ('RMHYP', 'Rem. Hipótese', ir_rmh),

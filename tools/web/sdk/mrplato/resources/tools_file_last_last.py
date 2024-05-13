@@ -110,8 +110,8 @@ class Prover():
         '''
 
                '''
-
         l_premisses, s_conclusion = self.extract_premisses_and_conclusion(selected_problem)
+
         # lp = selected_problem.split(' - ')  # lp = [index, argument]
         # # print(f'lp: {lp}')
         #
@@ -130,8 +130,8 @@ class Prover():
         # l_premisses = s_premisses.split(' , ')  # Premisses must be separated by  SPACE-COMMA-SPACE
         # print(f'l_premisses: {l_premisses}')
         # print(f's_conclusion: {s_conclusion}')
-
         r, msg = self.prepare_list_of_premisses(l_premisses)
+
         if not r:
             return r, msg
         else:
@@ -156,17 +156,14 @@ class Prover():
     # -----------------------------------------------------------------------------
     def extract_premisses_and_conclusion(self, selected_problem):
         # print(f"selected_problem: {selected_problem}")
-
         # selected_problem = selected_problem.rstrip()  # Remove control character from right of the string (\n for instance)
         lp = selected_problem
         if " - " in selected_problem:
             parts = selected_problem.split(' - ')  # lp = [index, argument]
             lp = parts[1]
 
-        # lp = selected_problem.split(' - ')  # lp = [index, argument]
 
         try:
-            # input_list = lp[1].replace('|=', fms.GlobalConstants.c_ass)  # Replace '|=' by  '⊢'
             input_list = lp.replace('|=', fms.GlobalConstants.c_ass)  # Replace '|=' by  '⊢'
             l_terms = input_list.split(' ' + fms.GlobalConstants.c_ass + ' ')  # Conclusion must appear after ' ⊢ "
             # l_terms is a list of 2 elements: a string of premisses and a conclusion
@@ -552,7 +549,7 @@ class Prover():
         :return: True/False, an error message and the new proof line generated
         '''
 
-        print('PROVING INFERENCE:')
+        # print('PROVING INFERENCE:')
 
         # Put all selected proof lines into a list
         sel_proof_lines = []
@@ -561,18 +558,10 @@ class Prover():
             # print(f"proof_line_list: {proof_line_list}")
             sel_proof_lines.append(proof_line_list[i])
 
-        if (self.argument_conclusion == fms.GlobalConstants.cnf or self.argument_conclusion == fms.GlobalConstants.dnf ):
-            error_message = 'Only equivalence rules \n can be used \n\n when conclusion is CNF ou DNF.'
-            user_input = 0
-            return False, error_message, user_input, None
-        # elif self.argument_conclusion == fms.GlobalConstants.true or self.argument_conclusion == fms.GlobalConstants.false:
-        #     error_message = (f'Only equivalence rules \n can be used \n\n when conclusion is'
-        #                      f' {fms.GlobalConstants.true} or {fms.GlobalConstants.false}.')
-        #     user_input = 0
-        #     return False, error_message, user_input, None
-        elif self.only_equiv_rules:
-                # self.argument_conclusion == fms.GlobalConstants.eqv): It was exchanged
-            error_message = 'Only equivalence rules \n can be used \n\n when conclusion is EQV.'
+        if (self.argument_conclusion == fms.GlobalConstants.cnf or self.argument_conclusion == fms.GlobalConstants.dnf \
+                or self.argument_conclusion == fms.GlobalConstants.true or self.argument_conclusion == fms.GlobalConstants.false
+                or self.argument_conclusion == fms.GlobalConstants.eqv):
+            error_message = 'Only equivalence rules \n can be used \n\n when proving equivalences.'
             user_input = 0
             return False, error_message, user_input, None
         else:
@@ -1362,39 +1351,11 @@ class Prover():
                 else:
                     return r, msg, None
         else:
-            msg = 'The formula is not a negation of a FOF. \nThe rule <' + rule_name + \
+            msg = 'The formula is not a negationa a a FOF. \nThe rule <' + rule_name + \
                   '>\ncannot be applied.' + '\n Please, try again.'
             return False, msg, form
 
     # -----------------------------------------------------------------------------
-
-    # def check_for_success(self, new_line):
-    #
-    #     # if self.conclusion == fms.GlobalConstants.cnf:
-    #     #     if self.checkForCNF(new_line):
-    #     #         return True # If the formula is in a normal form, returns
-    #     #         # else continue the proving process
-    #     # if self.conclusion == fms.GlobalConstants.dnf:
-    #     #     if self.checkForDNF(new_line):
-    #     #         return True # If the formula is in a normal form, returns
-    #     #         # else continue the proving process
-    #
-    #     if new_line == self.argument_conclusion:
-    #         if len(self.list_of_hypothesis) != 0:
-    #             error_message = 'You got to the conclusion, \n\n' \
-    #                             'but did not remove the last Temporary Hypothesis yet.\n\n' \
-    #                             'It must be removed first!'
-    #             return False, error_message
-    #         else:
-    #             #         self.stopClock()
-    #             #         self.saveSolution('FINAL')
-    #             #         # self.printProofTable()
-    #             #         # print('solution saved')
-    #             #         # self.loadSolution()
-    #             message = 'DEMONSTRATION ENDED SUCCESSFULLY.'
-    #             return True, message
-    #     else:
-    #         return False, ''
 
     def check_for_success(self, new_line):
 
@@ -1419,6 +1380,7 @@ class Prover():
                 return True, 'DEMONSTRATION ENDED SUCCESSFULLY!'
         else:
             return False, ''  # Proof not ended
+
 
     # -----------------------------------------------------------------------------
     def print_proof_lines(self, proof_lines):
@@ -1459,13 +1421,11 @@ class UsefullTools():
         # changes original occurrences of '<->
         input_string = input_string.replace('->', ' ' + cnt.c_if + ' ')  # Insert a space before and after '->'
         input_string = input_string.replace(',', ' , ')  # Insert a space before and after ',' in a list of premisses
-        input_string = input_string.replace('T', cnt.true)  # Tautology
-        input_string = input_string.replace('⊥', cnt.false)  # Contradiction
-        input_string = input_string.replace('TRUE', cnt.true)  # Tautology
-        input_string = input_string.replace('FALSE', cnt.false)  # Contradiction
-        input_string = input_string.replace('EQV', cnt.eqv)  # EQV
-        input_string = input_string.replace('CNF', cnt.cnf)  # CNF
-        input_string = input_string.replace('DNF', cnt.dnf)  # DNF
+        # input_string = input_string.replace('T', cnt.true)  # Tautology
+        # input_string = input_string.replace('⊥', cnt.false)  # Contradiction
+        input_string = input_string.replace('eqv', cnt.eqv)  # EQV
+        input_string = input_string.replace('cnf', cnt.cnf)  # CNF
+        input_string = input_string.replace('dnf', cnt.dnf)  # DNF
         for c in cnt.list_of_functs:
             input_string = input_string.replace(c, ' ' + c)  # Insert a space before a functor symbol
 
@@ -1606,17 +1566,7 @@ class UsefullTools():
         return sub_list, ind_in, ind_f
 
     # # -----------------------------------------------------------------------------
-    # def input_formula(self):
-    #     """
-    #
-    #     """
-    #
-    #     new_formula = input('Input the formula: ')
-    #     r, msg, prepared_new_formula = self.prepare_new_formula(new_formula)
-    #
-    #     return r, msg, prepared_new_formula
-    ##### Modificado pelo Jonatas
-    def input_formula(self, input_formula):
+    def input_formula(self,input_formula):
         """
 
         """
@@ -1625,6 +1575,7 @@ class UsefullTools():
         r, msg, prepared_new_formula = self.prepare_new_formula(new_formula)
 
         return r, msg, prepared_new_formula
+
 
     # -----------------------------------------------------------------------------
     def prepare_new_formula(self, new_formula):

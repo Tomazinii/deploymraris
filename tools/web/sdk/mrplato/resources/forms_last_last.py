@@ -38,9 +38,7 @@ class GlobalConstants():
     list_of_consts = ['a', 'b', 'c', 'd', 'e']
     list_of_terms = list_of_vars + list_of_consts
     list_of_quants = [fa,ex ]
-    list_of_mprops = ['A','B','C','D']
-    list_of_aprops = ['m','n','o','p', 'q', 'r', 's', 't', 'u']
-    list_of_functs = list_of_aprops+list_of_mprops
+    list_of_functs = ['m', 'n', 'o','p', 'q', 'r', 's', 't', 'u']
     list_of_cnecs =  [c_and,c_or,c_if,c_iff]
     list_of_all_conecs = [c_not]+list_of_cnecs
 
@@ -737,12 +735,12 @@ def generate_represent(form):
 # -----------------------------------------------------------------------------
 def gen_repr1(form0):
     # print(f'form0: {form0}')
-    if form0 in GlobalConstants.list_of_all_conecs:  # Operations must have an operand - [ '~','^','v','->','<->']
+    if form0 in GlobalConstants.list_of_all_conecs:  # Those operations must have an operand - [ '~','^','v','->','<->']
         err_message = 'Error: an operand is missing.'
         return False, err_message, None
     elif form0  in [ '⊤','⊥']:  # Constants
         return True, '', Form0(form0)
-    elif form0  in GlobalConstants.list_of_functs:  # Operations must have an operand - ['p', 'q', 'r', 's', 't','u']
+    elif form0  in GlobalConstants.list_of_functs:  # Those operations must have an operand - ['p', 'q', 'r', 's', 't','u']
         return True, '', Form(form0)
     elif form0  in [ '⊤','⊥']:  # Constants
         return True, '', Form0(form0)
