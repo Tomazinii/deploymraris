@@ -4,12 +4,9 @@ Created on Tue Nov 07 08:19: 2023
 @author: cedric
 """
 
-import copy
-import os
-from itertools import chain, combinations
 
-import forms as fms
-import tools
+from web.sdk.mrplato.resources import tools_file as tools
+from web.sdk.mrplato.resources import forms as fms
 
 import tokenize
 
@@ -36,14 +33,13 @@ def is_arg_wff(l_premisses,conclusion):
 # -----------------------------------------------------------------------------
 def prepare_list_of_premisses(l_premisses):
 
-    tls = tools.UsefullTools()
     l_prep_premisses = []
 
     # Preparing the list of premisses
     for p in l_premisses:
         prem = " ".join(p)
         # print(f'prem antes: {prem}')
-        prem = tls.insert_spaces(prem)
+        prem = insert_spaces(prem)
         # print(f'prem depois: {prem}')
         list_prem = prem.split()
         # Variables in predicates must be separated by COMMAS WITHOUT spaces between it
@@ -59,9 +55,8 @@ def prepare_list_of_premisses(l_premisses):
 # -----------------------------------------------------------------------------
 def prepare_conclusion(conclusion):
 
-    tls = tools.UsefullTools()
     s_conclusion = " ".join(conclusion)
-    s_conclusion = tls.insert_spaces(s_conclusion)
+    s_conclusion = insert_spaces(s_conclusion)
     # print(f's_conclusion1: <{s_conclusion}> - type: {type(s_conclusion)}')
     list_s_conclusion = s_conclusion.split()
     list_s_conclusion = list(
@@ -101,6 +96,38 @@ def is_wff(formula):  # formula is in string format
             return r2, error_message, ""
         else:
             return True, '', formula
+
+
+# -----------------------------------------------------------------------------
+def insert_spaces(input_string):
+    cnt = fms.GlobalConstants()
+
+    input_string = input_string.replace(cnt.fa, ' ' + cnt.fa + ' ')  # Insert a space before and after 'fa'
+    input_string = input_string.replace(cnt.ex, ' ' + cnt.ex + ' ')  # Insert a space before and after 'ex'
+    input_string = input_string.replace(cnt.c_not, ' ' + cnt.c_not + ' ')  # Insert a space before and after 'not'
+    input_string = input_string.replace('&', ' ' + cnt.c_and + ' ')  # Insert a space before and after ',' (AND)
+    input_string = input_string.replace('^', ' ' + cnt.c_and + ' ')  # Insert a space before and after ',' (AND)
+    input_string = input_string.replace('|', ' ' + cnt.c_or + ' ')  # Insert a space before and after '|' (OR)
+    input_string = input_string.replace('v', ' ' + cnt.c_or + ' ')  # Insert a space before and after '|' (OR)
+    input_string = input_string.replace('(', ' ( ')  # Insert a space before and after '('
+    input_string = input_string.replace(')', ' ) ')  # Insert a space before and after ')'
+    input_string = input_string.replace('~', ' ' + cnt.c_not + ' ')  # Insert a space before and after '~'
+    input_string = input_string.replace('<->',
+                                        ' ' + cnt.c_iff + ' ')  # Insert a space before and after '<->'. The previous line
+    # changes original occurrences of '<->
+    input_string = input_string.replace('->', ' ' + cnt.c_if + ' ')  # Insert a space before and after '->'
+    input_string = input_string.replace(',', ' , ')  # Insert a space before and after ',' in a list of premisses
+    input_string = input_string.replace('T', cnt.true)  # Tautology
+    input_string = input_string.replace('⊥', cnt.false)  # Contradiction
+    # input_string = input_string.replace('T', cnt.true)  # Tautology
+    # input_string = input_string.replace('F', cnt.false)  # Contradiction
+    input_string = input_string.replace('eqv', cnt.eqv)  # EQV
+    input_string = input_string.replace('cnf', cnt.cnf)  # CNF
+    input_string = input_string.replace('dnf', cnt.dnf)  # DNF
+    for c in cnt.list_of_functs:
+        input_string = input_string.replace(c, ' ' + c)  # Insert a space before a functor symbol
+
+    return input_string
 
 
 # -----------------------------------------------------------------------------
@@ -148,7 +175,7 @@ def check_input(l_strings):
 
     ind = 0
     for a in l_args:
-        # print(f"Checking line[{ind}]: {a}")
+        print(f"Checking line[{ind}]: {a}")
         ind = ind+1
 
         r0, msg0, l_premisses, conclusion = get_l_premisses_conclusion(a)
@@ -173,7 +200,7 @@ def check_input(l_strings):
 def drop_unusefull_tokens(l_strings):
 
     n_lstrings = []
-    author = "Anonymous"
+    author = "Anonimous"
     i = 0
     while i < len(l_strings):
         # print(f"l_strings[{i}]: {l_strings[i]} :")
@@ -202,9 +229,9 @@ def drop_unusefull_tokens(l_strings):
                 j=j+1
             author = n_author
             i = j
-            # print(f"author: {author}")
+            print(f"author: {author}")
         else:
-            if l_strings[i][0] == 60 and l_strings[i][1] not in ['∀','∃','!']:
+            if l_strings[i][0] == 60 and l_strings[i][1] not in ['∀','∃']:
                 # print(f"drop: {l_strings[i][0]} : {l_strings[i][1]}")
                 pass
             else:
@@ -212,7 +239,7 @@ def drop_unusefull_tokens(l_strings):
                 # print(f"token: {l_strings[i]}")
         i= i+1
 
-    # print(f"author: {author}")
+    print(f"author: {author}")
     return n_lstrings, author
 
 # -----------------------------------------------------------------------------

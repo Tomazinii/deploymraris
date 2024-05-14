@@ -30,11 +30,11 @@ class GlobalConstants():
     cnf = 'CNF'
     dnf = 'DNF'
     eqv = 'EQV'
-    true2 = 'T'
-    false2 = 'F'
+    true2 = 'T' # delete this
+    false2 = 'F' # delete this
 
     list_of_vars = ['x', 'y', 'z', 'w']
-    list_of_special_consts = [true, false, true2, false2, eqv, cnf, dnf]
+    list_of_special_consts = [true, false, true2, false2, eqv, cnf, dnf] # check this
     list_of_consts = ['a', 'b', 'c', 'd', 'e']
     list_of_terms = list_of_vars + list_of_consts
     list_of_quants = [fa,ex ]

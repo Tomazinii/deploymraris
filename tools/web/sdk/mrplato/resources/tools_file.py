@@ -14,6 +14,7 @@ from web.sdk.mrplato.resources import equivRules as equiv
 from web.sdk.mrplato.resources import predRules as pred
 from web.sdk.mrplato.resources import deducInfer as ddi
 
+
 # -----------------------------------------------------------------------------
 class Prover():
     """
@@ -235,14 +236,14 @@ class Prover():
         elif list_s_conclusion[0] == fms.GlobalConstants.true:
             # self.ids.in_arg_label.text = self.ids.in_arg_label.text + '\n' + \
             #                              fms.GlobalConstants.c_equiv + ' ' + fms.GlobalConstants.true
-            self.argument_premisses = fms.Form0(fms.GlobalConstants.true)
-            self.only_equiv_rules = True
+            self.argument_conclusion = fms.Form0(fms.GlobalConstants.true)
+            # self.only_equiv_rules = True
             return True, ''
         elif list_s_conclusion[0] == fms.GlobalConstants.false:
             # self.ids.in_arg_label.text = self.ids.in_arg_label.text + '\n' + \
             #                              fms.GlobalConstants.c_equiv + ' ' + fms.GlobalConstants.false
             self.argument_conclusion = fms.Form0(fms.GlobalConstants.false)
-            self.only_equiv_rules = True
+            # self.only_equiv_rules = True
             return True, ''
         else:
             r, msg = self.input_conclusion(list_s_conclusion)  # Include conclusion
@@ -552,7 +553,7 @@ class Prover():
         :return: True/False, an error message and the new proof line generated
         '''
 
-        print('PROVING INFERENCE:')
+        # print('PROVING INFERENCE:')
 
         # Put all selected proof lines into a list
         sel_proof_lines = []
@@ -1442,6 +1443,8 @@ class UsefullTools():
 
     # -----------------------------------------------------------------------------
     def insert_spaces(self, input_string):
+
+        # print(f"input_string: {input_string}")
         cnt = fms.GlobalConstants()
 
         input_string = input_string.replace(cnt.fa, ' ' + cnt.fa + ' ')  # Insert a space before and after 'fa'
@@ -1461,8 +1464,7 @@ class UsefullTools():
         input_string = input_string.replace(',', ' , ')  # Insert a space before and after ',' in a list of premisses
         input_string = input_string.replace('T', cnt.true)  # Tautology
         input_string = input_string.replace('⊥', cnt.false)  # Contradiction
-        input_string = input_string.replace('TRUE', cnt.true)  # Tautology
-        input_string = input_string.replace('FALSE', cnt.false)  # Contradiction
+        input_string = input_string.replace('!', cnt.false)  # Contradiction
         input_string = input_string.replace('EQV', cnt.eqv)  # EQV
         input_string = input_string.replace('CNF', cnt.cnf)  # CNF
         input_string = input_string.replace('DNF', cnt.dnf)  # DNF
