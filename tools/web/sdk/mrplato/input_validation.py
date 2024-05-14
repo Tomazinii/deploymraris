@@ -8,8 +8,8 @@ import copy
 import os
 from itertools import chain, combinations
 
-import forms as fms
-import tools
+from web.sdk.mrplato.resources import tools_file as tools
+from web.sdk.mrplato.resources import forms as fms
 
 import tokenize
 
