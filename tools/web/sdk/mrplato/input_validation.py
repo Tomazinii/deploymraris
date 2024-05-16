@@ -67,9 +67,9 @@ def prepare_conclusion(conclusion):
     list_s_conclusion = list(
         filter((',').__ne__, list_s_conclusion))  # remove all occurrences of ',' from the input_string
 
-    if list_s_conclusion[0] in [fms.GlobalConstants.eqv, fms.GlobalConstants.cnf, fms.GlobalConstants.dnf,
-                                fms.GlobalConstants.true, fms.GlobalConstants.false,
-                                fms.GlobalConstants.true2, fms.GlobalConstants.false2]:
+    if list_s_conclusion[0] in [fms.GlobalConstants.eqv, fms.GlobalConstants.cnf,
+                                fms.GlobalConstants.dnf, fms.GlobalConstants.ics,
+                                fms.GlobalConstants.true, fms.GlobalConstants.false]:
         return True, '', list_s_conclusion[0]
 
     else:
@@ -148,7 +148,7 @@ def check_input(l_strings):
 
     ind = 0
     for a in l_args:
-        # print(f"Checking line[{ind}]: {a}")
+        print(f"Checking line[{ind}]: {a}")
         ind = ind+1
 
         r0, msg0, l_premisses, conclusion = get_l_premisses_conclusion(a)

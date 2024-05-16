@@ -30,11 +30,12 @@ class GlobalConstants():
     cnf = 'CNF'
     dnf = 'DNF'
     eqv = 'EQV'
-    true2 = 'T' # delete this
-    false2 = 'F' # delete this
+    ics = 'ICS'
+    # true2 = 'T' # delete this
+    # false2 = 'F' # delete this
 
     list_of_vars = ['x', 'y', 'z', 'w']
-    list_of_special_consts = [true, false, true2, false2, eqv, cnf, dnf] # check this
+    # list_of_special_consts = [true, false, true2, false2, eqv, cnf, dnf] # check this
     list_of_consts = ['a', 'b', 'c', 'd', 'e']
     list_of_terms = list_of_vars + list_of_consts
     list_of_quants = [fa,ex ]
@@ -455,10 +456,17 @@ def unify(initDic,formula1,formula2):
             r, newDic = unify(initDic, f1_opnd1, Form1(GlobalConstants.c_not,formula2))  # ~p => A produces {p:~A}
             return r & True, newDic
     elif (type(formula1) is Form2) & (type(formula2) is Form1):
-        q = formula2.getOpnd1()
-        n_q  = simplify_negations(q) # Each two negations are cancelled
-        r, newDic = unify(initDic, formula1,n_q)
-        return r & True, newDic
+        # q = formula2.getOpnd1()
+        # n_q  = simplify_negations(q) # Each two negations are cancelled
+        # r, newDic = unify(initDic, formula1,n_q)
+        # return r & True, newDic
+        return False,initDic
+    elif (type(formula1) is Form1) & (type(formula2) is Form2):
+        # q = formula2.getOpnd1()
+        # n_q  = simplify_negations(q) # Each two negations are cancelled
+        # r, newDic = unify(initDic, formula1,n_q)
+        # return r & True, newDic
+        return False,initDic
     elif (type(formula1) is Form2) & (type(formula2) is Form2):
         if formula1.getOper() == formula2.getOper(): # cond., bicond., conj. e disj.
             r1, newDic = unify(initDic, formula1.getOpnd1(),formula2.getOpnd1() )

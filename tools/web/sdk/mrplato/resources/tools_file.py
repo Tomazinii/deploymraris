@@ -233,6 +233,9 @@ class Prover():
             self.argument_conclusion = fms.GlobalConstants.dnf
             self.only_equiv_rules = True
             return True, ''
+        elif list_s_conclusion[0] == fms.GlobalConstants.ics: # set of premisses are inconsistent
+            self.argument_conclusion = fms.Form0(fms.GlobalConstants.false)
+            return True, ''
         elif list_s_conclusion[0] == fms.GlobalConstants.true:
             # self.ids.in_arg_label.text = self.ids.in_arg_label.text + '\n' + \
             #                              fms.GlobalConstants.c_equiv + ' ' + fms.GlobalConstants.true
@@ -1369,34 +1372,6 @@ class Prover():
 
     # -----------------------------------------------------------------------------
 
-    # def check_for_success(self, new_line):
-    #
-    #     # if self.conclusion == fms.GlobalConstants.cnf:
-    #     #     if self.checkForCNF(new_line):
-    #     #         return True # If the formula is in a normal form, returns
-    #     #         # else continue the proving process
-    #     # if self.conclusion == fms.GlobalConstants.dnf:
-    #     #     if self.checkForDNF(new_line):
-    #     #         return True # If the formula is in a normal form, returns
-    #     #         # else continue the proving process
-    #
-    #     if new_line == self.argument_conclusion:
-    #         if len(self.list_of_hypothesis) != 0:
-    #             error_message = 'You got to the conclusion, \n\n' \
-    #                             'but did not remove the last Temporary Hypothesis yet.\n\n' \
-    #                             'It must be removed first!'
-    #             return False, error_message
-    #         else:
-    #             #         self.stopClock()
-    #             #         self.saveSolution('FINAL')
-    #             #         # self.printProofTable()
-    #             #         # print('solution saved')
-    #             #         # self.loadSolution()
-    #             message = 'DEMONSTRATION ENDED SUCCESSFULLY.'
-    #             return True, message
-    #     else:
-    #         return False, ''
-
     def check_for_success(self, new_line):
 
         tls = UsefullTools()
@@ -1407,8 +1382,8 @@ class Prover():
         elif conclusion == fms.GlobalConstants.dnf:
             r = tls.is_dnf(new_line)
         else:
-            # print(f"new_line: {new_line} - type: {type(new_line)}")
-            # print(f"conclusion: {conclusion} - type: {type(conclusion)}")
+            print(f"new_line: {new_line} - type: {type(new_line)}")
+            print(f"conclusion: {conclusion} - type: {type(conclusion)}")
             r = new_line == conclusion
         if (r):
             if len(self.list_of_hypothesis) != 0:
@@ -1444,8 +1419,10 @@ class UsefullTools():
     # -----------------------------------------------------------------------------
     def insert_spaces(self, input_string):
 
-        # print(f"input_string: {input_string}")
         cnt = fms.GlobalConstants()
+
+        for c in cnt.list_of_aprops:
+            input_string = input_string.replace(c, ' ' + c)  # Insert a space before a functor symbol
 
         input_string = input_string.replace(cnt.fa, ' ' + cnt.fa + ' ')  # Insert a space before and after 'fa'
         input_string = input_string.replace(cnt.ex, ' ' + cnt.ex + ' ')  # Insert a space before and after 'ex'
@@ -1468,8 +1445,7 @@ class UsefullTools():
         input_string = input_string.replace('EQV', cnt.eqv)  # EQV
         input_string = input_string.replace('CNF', cnt.cnf)  # CNF
         input_string = input_string.replace('DNF', cnt.dnf)  # DNF
-        for c in cnt.list_of_functs:
-            input_string = input_string.replace(c, ' ' + c)  # Insert a space before a functor symbol
+        input_string = input_string.replace('ICS', cnt.ics)  # Inconsistent premisses
 
         return input_string
 
