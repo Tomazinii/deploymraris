@@ -701,6 +701,8 @@ def print_mapeamento(dic):
         print('(', key, ': ', value,')') 
     print("}")
 
+
+
 # -----------------------------------------------------------------------------
 def generate_represent(form):
     '''
@@ -727,7 +729,8 @@ def generate_represent(form):
     elif (l == 1):
         return gen_repr1(form[0])
     elif (l == 2):
-        return gen_repr2(form)
+        r = gen_repr2(form)
+        return r
     elif (l > 2): # In case l > 2 : the main operator should be in ['^','v','->','<->']
 
         r, err_message, oper, opnd1,opnd2 = handle_precedence_of_operators(form)
@@ -740,8 +743,10 @@ def generate_represent(form):
             return gen_reprFof(form)
 
     else:
-        err_message = 'Wrong operator!'
-        return r, err_message, None
+        err_message = f'Wrong operator: {form}'
+        return False, err_message, None
+
+
 # -----------------------------------------------------------------------------
 def gen_repr1(form0):
     # print(f'form0: {form0}')
@@ -772,7 +777,12 @@ def gen_repr2(form):
         err_message = f'Error: the second operand is missing: {form[1]}.'
         return False, err_message, None
     elif form[0] in GlobalConstants.list_of_functs:  # Those operations must have an operand - ['p', 'q', 'r', 's', 't', 'u']
-        pred_vars = list(filter((',').__ne__, form[1]))  # remove all occurences of ',' from the list of vars
+        pred_vars = list(filter((',').__ne__, form[1]))  # remove all occurrences of ',' from the list of vars
+        for t in pred_vars:
+            if t not in GlobalConstants.list_of_terms:
+                msg = f"Illegal predicate argument: <{t}>."
+                return False, msg, ''
+
         nf = Pred(form[0],pred_vars)
         return True, '', nf
     else:
@@ -791,21 +801,21 @@ def gen_reprForm2( oper, opnd1,opnd2):
         r, error_message, r_opnd2 = generate_represent(opnd2)
         if r:
             return r, error_message, Form2(opnd1, oper, r_opnd2)
+        else:
+            return r, error_message, ""
     else:
         r, error_message, r_opnd1 = generate_represent(opnd1)
         # print(f'r: {r}- error - {error_message}')
         if r:
             # print(f'opnd2:{opnd2}')
-            r, error_message, r_opnd2 = generate_represent(opnd2)
+            r1, error_message, r_opnd2 = generate_represent(opnd2)
             # print(f'r: {r} - r_opnd2: {r_opnd2}')
-            if r:
-                return r, error_message, Form2(r_opnd1, oper, r_opnd2)
+            if r1:
+                return r1, error_message, Form2(r_opnd1, oper, r_opnd2)
             else:
-                err_message = f'Error: the second operand is missing: {opnd2}.'
-                return r, err_message, None
+                return r1, error_message, r_opnd2
         else:
-            err_message= f'Error: the first operand is missing: {opnd1}.'
-            return r, err_message, None
+            return r, error_message, r_opnd1
 
 # -----------------------------------------------------------------------------
 def gen_reprFof(form):
@@ -829,7 +839,7 @@ def gen_reprFof(form):
         else:
             return r, err_message, scope
 
-    err_message= 'Error: no quantifier found.'
+    err_message= f'Error: invalid predicate: <{form}>'
     return False, err_message, None
 
 # -----------------------------------------------------------------------------
@@ -847,7 +857,7 @@ def gen_reprFof(form):
 
 def handle_precedence_of_operators(form):
     """
-        Handle precedence of operators, according to the sequence (~,v,^,->,<->).
+        Handle precedence of operators, according to the sequence (~,^,v,->,<->).
         Traverses the string looking for the main operator. After this, looks
         for the left and right operands.
 
@@ -861,10 +871,10 @@ def handle_precedence_of_operators(form):
         first_occur[GlobalConstants.c_iff] = form.index(GlobalConstants.c_iff)
     if GlobalConstants.c_if in form:
         first_occur[GlobalConstants.c_if] = form.index(GlobalConstants.c_if)
-    if GlobalConstants.c_and in form:
-        first_occur[GlobalConstants.c_and] = form.index(GlobalConstants.c_and)
     if GlobalConstants.c_or in form:
         first_occur[GlobalConstants.c_or]= form.index(GlobalConstants.c_or)
+    if GlobalConstants.c_and in form:
+        first_occur[GlobalConstants.c_and] = form.index(GlobalConstants.c_and)
 
     if len(first_occur) == 0:
         if form[0] == GlobalConstants.c_not:
@@ -930,9 +940,9 @@ def handle_precedence_of_operators(form):
 #
 # l6 = ['p', ['a']]
 # l7 = ['p', ['a']]
-#
+# l18 = ('%')
 
-# r, msg, form1 = generate_represent(p1)
+# r, msg, form1 = generate_represent(l18)
 # r, msg, form2 = generate_represent(p2)
 # print(f'r: {r}')
 # print(f'msg : {msg}')
@@ -940,6 +950,11 @@ def handle_precedence_of_operators(form):
 # print(f'form2: {form2} - type: {type(form2)}')
 # print(f'is?: {form1 == form2}')
 
+
+
+l = ['p', '∧', 'q', 'a', 'x' ]
+r = generate_represent(l)
+print(r)
 # -----------------------------------------------------------------------------
 def generate_list_represent(listOfForms):
     '''
@@ -953,6 +968,7 @@ def generate_list_represent(listOfForms):
     formsRepr =[]  # Linhas de prova codificadas
     i = 0
     r = False
+    mes = ''
     while i < len(listOfForms):
         r, mes, form = generate_represent(listOfForms[i])
         if r:
@@ -972,7 +988,8 @@ def generate_list_represent(listOfForms):
 #
 # print(p1 == p2)
 
-# form = ('p', '->', ('q', '->', 'r'))
+
+# form = ('p', '->', ('q', '->', 'r', '%'))
 # f= generate_represent(form)
 # print(f)
 

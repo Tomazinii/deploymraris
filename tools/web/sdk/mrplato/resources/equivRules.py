@@ -13,6 +13,7 @@ from itertools import permutations
 
 from web.sdk.mrplato.resources import forms as fms
 
+
 # -----------------------------------------------------------------------------
 
 
@@ -445,9 +446,9 @@ def createEquRules():
     # Properties of conjuction and disjuction
 
     ir_distr_c = {'Distr._c': (('A', fms.GlobalConstants.c_and, ('B', fms.GlobalConstants.c_or, 'C')), (('A', fms.GlobalConstants.c_and, 'B'), fms.GlobalConstants.c_or, ('A', fms.GlobalConstants.c_and, 'C')))}
-    ir_distr_c2 = {'Distr._c2': ( (('A', fms.GlobalConstants.c_and, 'B'), fms.GlobalConstants.c_or, ('C', fms.GlobalConstants.c_and, 's')), (('A', fms.GlobalConstants.c_or, ('C', fms.GlobalConstants.c_and, 's')), fms.GlobalConstants.c_and,('B', fms.GlobalConstants.c_or, ('C', fms.GlobalConstants.c_and, 's'))))}
+    ir_distr_c2 = {'Distr._c2': ( (('A', fms.GlobalConstants.c_and, 'B'), fms.GlobalConstants.c_or, ('C', fms.GlobalConstants.c_and, 'D')), (('A', fms.GlobalConstants.c_or, ('C', fms.GlobalConstants.c_and, 'D')), fms.GlobalConstants.c_and,('B', fms.GlobalConstants.c_or, ('C', fms.GlobalConstants.c_and, 'D'))))}
     ir_distr_d = {'Distr._d': (('A', fms.GlobalConstants.c_or, ('B', fms.GlobalConstants.c_and, 'C')), (('A', fms.GlobalConstants.c_or, 'B'), fms.GlobalConstants.c_and, ('A', fms.GlobalConstants.c_or, 'C')))}
-    ir_distr_d2 = {'Distr._d2': ( (('A', fms.GlobalConstants.c_or, 'B'), fms.GlobalConstants.c_and, ('C', fms.GlobalConstants.c_or, 's')), (('A', fms.GlobalConstants.c_and, ('C', fms.GlobalConstants.c_or, 's')), fms.GlobalConstants.c_or,('B', fms.GlobalConstants.c_and, ('C', fms.GlobalConstants.c_or, 's'))))}
+    ir_distr_d2 = {'Distr._d2': ( (('A', fms.GlobalConstants.c_or, 'B'), fms.GlobalConstants.c_and, ('C', fms.GlobalConstants.c_or, 'D')), (('A', fms.GlobalConstants.c_and, ('C', fms.GlobalConstants.c_or, 'D')), fms.GlobalConstants.c_or,('B', fms.GlobalConstants.c_and, ('C', fms.GlobalConstants.c_or, 'D'))))}
     ir_abs_c = {'Absorção_c': (('A', fms.GlobalConstants.c_and, ('A', fms.GlobalConstants.c_or, 'B')), 'A')}
     ir_abs_d = {'Absorção_d': (('A', fms.GlobalConstants.c_or, ('A', fms.GlobalConstants.c_and, 'B')), 'A')}
     ir_dm_c = {'De Morgan_c': ((fms.GlobalConstants.c_not,('A',fms.GlobalConstants.c_and,'B')),((fms.GlobalConstants.c_not,'A'),fms.GlobalConstants.c_or,(fms.GlobalConstants.c_not,'B')))}

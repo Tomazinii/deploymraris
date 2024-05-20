@@ -15,6 +15,7 @@ from web.sdk.mrplato.resources import predRules as pred
 from web.sdk.mrplato.resources import deducInfer as ddi
 
 
+
 # -----------------------------------------------------------------------------
 class Prover():
     """
@@ -213,13 +214,17 @@ class Prover():
             filter((',').__ne__, list_s_conclusion))  # remove all occurrences of ',' from the input_string
 
         if list_s_conclusion[0] == fms.GlobalConstants.eqv:
-            # self.argument_conclusion = fms.GlobalConstants.eqv
-            self.argument_conclusion = self.remove_rule_reference(self.argument_premisses[1])
-            self.argument_premisses = [self.argument_premisses[0]]
-            self.proof_lines = self.argument_premisses
-            self.only_equiv_rules = True
-            self.can_exchange_ant_conseq = True
-            return True, ''
+            if len(self.argument_premisses) != 2:
+                msg = "Only two formulas can appear in EQV statement."
+                return False, msg
+            else:
+                # self.argument_conclusion = fms.GlobalConstants.eqv
+                self.argument_conclusion = self.remove_rule_reference(self.argument_premisses[1])
+                self.argument_premisses = [self.argument_premisses[0]]
+                self.proof_lines = self.argument_premisses
+                self.only_equiv_rules = True
+                self.can_exchange_ant_conseq = True
+                return True, ''
         elif list_s_conclusion[0] == fms.GlobalConstants.cnf:
             # self.ids.in_arg_label.text = self.ids.in_arg_label.text + '\n' + \
             #                              fms.GlobalConstants.c_equiv + ' CNF'
@@ -741,6 +746,8 @@ class Prover():
 
         original_form = original_form.split(' - AT POS ')[0]
         sform_original, form_list, begin, end = self.get_partial_formula(selection)
+        # print(f'begin: {begin}')
+        # print(f'end: {end}')
 
         tools = UsefullTools()
         r, error_message, prep_formula = tools.remove_parenthesis(form_list)
@@ -770,15 +777,22 @@ class Prover():
                     cnt = fms.GlobalConstants()
                     # print(f'snewForm: {s_newForm} - type: {type(s_newForm)}')
                     s_newForm = s_newForm.replace(cnt.c_not + cnt.c_not, cnt.c_not + ' ' + cnt.c_not)
-                    # print(f's_newForm2: {s_newForm} - type: {type(s_newForm)}')
+                    # print(f's_newForm: {s_newForm} - type: {type(s_newForm)}')
 
                     # print(f'original_form: {original_form} - type: {type(original_form)}')
                     # print(f'sform_original: {sform_original} - len(sform_original): {len(sform_original)}')
-                    new_text = original_form.replace(sform_original, s_newForm)
+                    # new_text = original_form.replace(sform_original, s_newForm,1)
+                    new_text = self.replace_by_newform(original_form, s_newForm,begin,end)
                     # print(f'new_text: {new_text}')
                     r, msg, prep_new_text = tools.prepare_new_formula(new_text)
                     # print(f'prep_new_text: {prep_new_text}')
                     return r, msg, prep_new_text
+
+    # -----------------------------------------------------------------------------
+    def replace_by_newform(self, original_form, s_newForm, begin, end):
+
+        nformula = original_form[0:begin]+s_newForm+original_form[end+1:]
+        return nformula
 
 
     # -----------------------------------------------------------------------------
@@ -914,7 +928,7 @@ class Prover():
 
                     # print(f'original_form: {original_form} - type: {type(original_form)}')
                     # print(f'sform_original: {sform_original} - len(sform_original): {len(sform_original)}')
-                    new_text = original_form.replace(sform_original, s_newForm)
+                    new_text = self.replace_by_newform(original_form, s_newForm, begin,end)
                     # print(f'new_text: {new_text}')
                     r, msg, prep_new_text = tools.prepare_new_formula(new_text)
                     # print(f'prep_new_text: {prep_new_text}')
@@ -1371,7 +1385,7 @@ class Prover():
             return False, msg, form
 
     # -----------------------------------------------------------------------------
-
+# retirar o  argumento conclusion
     def check_for_success(self, new_line):
 
         tls = UsefullTools()
@@ -1382,8 +1396,8 @@ class Prover():
         elif conclusion == fms.GlobalConstants.dnf:
             r = tls.is_dnf(new_line)
         else:
-            print(f"new_line: {new_line} - type: {type(new_line)}")
-            print(f"conclusion: {conclusion} - type: {type(conclusion)}")
+            # print(f"new_line: {new_line} - type: {type(new_line)}")
+            # print(f"conclusion: {conclusion} - type: {type(conclusion)}")
             r = new_line == conclusion
         if (r):
             if len(self.list_of_hypothesis) != 0:
@@ -1465,14 +1479,14 @@ class UsefullTools():
 
         # # -----------------------------------------------------------------------------
         # def check_selected_lines(self, selected_proof_lines, forbidden_lines):
-        '''
-        Check if just one line was selected and if it is not forbidden
-
-        :param selected_proof_lines: a list of the selected lines
-        :param forbidden_lines: the list of forbidden lines (those that were
-            marked when a hypothesis was removed
-        :return: True/False and an error message
-        '''
+        # '''
+        # Check if just one line was selected and if it is not forbidden
+        #
+        # :param selected_proof_lines: a list of the selected lines
+        # :param forbidden_lines: the list of forbidden lines (those that were
+        #     marked when a hypothesis was removed
+        # :return: True/False and an error message
+        # '''
 
         # r, msg = self.check_if_just_one_line_selected(selected_proof_lines)
         #
@@ -1774,13 +1788,7 @@ class UsefullTools():
                 if self.is_literal(d):
                     r = True and r
                 else:
-                    l_conj_d = self.get_conjunct_list(d)
-                    # print(f" l_conj_d: {l_conj_d}")
-                    if l_conj_d:
-                        # print("FALSE")
-                        r = False
-                    else:
-                        r = True and r
+                    return False
 
         return r
 
@@ -1789,6 +1797,8 @@ class UsefullTools():
 
         # print(f"Formula: {formula} - type: {type(formula)}")
         l_disj = self.get_disjunct_list(formula)
+        # for ld in l_disj:
+        #     print(f"ld: {ld}")
 
         if len(l_disj) == 1:
             if self.is_literal(l_disj[0]):
@@ -1800,20 +1810,15 @@ class UsefullTools():
 
         r = True
         for disj in l_disj:
-            # print(f" conj: {conj}")
+            # print(f"disj: {disj}")
             l_conj = self.get_conjunct_list(disj)
+            # print(f"l_conj: {l_conj}")
             for c in l_conj:
-                # print(f" d: {d}")
+                # print(f" c: {c}")
                 if self.is_literal(c):
                     r = True and r
                 else:
-                    l_disj_d = tls.get_disjunct_list(c)
-                    # print(f" l_conj_d: {l_conj_d}")
-                    if l_disj_d:
-                        # print("FALSE")
-                        r = False
-                    else:
-                        r = True and r
+                    return False
 
         return r
 
@@ -1821,6 +1826,8 @@ class UsefullTools():
     def get_conjunct_list(self, form):
 
         if self.is_literal(form):
+            return [form]
+        elif type(form) is fms.Form1:
             return [form]
         elif type(form) is fms.Form2:
             # print("form2")
@@ -1844,6 +1851,8 @@ class UsefullTools():
     def get_disjunct_list(self, form):
 
         if self.is_literal(form):
+            return [form]
+        elif type(form) is fms.Form1:
             return [form]
         elif type(form) is fms.Form2:
             # print("form2")
@@ -1920,7 +1929,7 @@ if __name__ == '__main__':
     pv = Prover()
 
     formula0 = "0 - ~p  ⊢ CNF"
-    formula1 = "0 - p ^ s ⊢ CNF"
+    formula1 = "0 - p v s ^ q ⊢ CNF"
     formula2 = "0 - p ^ (p ^ r) ⊢ CNF"
     formula3 = "0 - p ^ (p ^ r) ^ q ⊢ CNF"
     formula4 = "0 - p ^ (p v (r ^ s)) ^ (q v s) ⊢ CNF"
@@ -1929,19 +1938,57 @@ if __name__ == '__main__':
     formula7 = "0 - ~p v q  ⊢ CNF "
     formula8 = "0 - (~p v q) v (~q v p)  ⊢ CNF "
     formula9 = "0 - ~p ^ q  ⊢ CNF "
-    formula10 = "0 - (~p ^ q) ^ (~q ^ p)  ⊢ CNF "
+    formula10 = "0 - (~p ^ q) ^ (~q ^ p)  ⊢ DNF "
+    formula11 = "0 - ∼p ∨ ∼(q ∨ r) ⊢ DNF"
+    formula12 = "0 - ~p v (~q ^ p)  ⊢ CNF "  # False
+    formula13 = "0 - ~p ^ (~q v p)  ⊢ CNF "  # True
+    formula14 = "0 - ~p v (~q ^r v p )  ⊢ DNF "  # False
+    formula15 = "0 - ~p ^ (~q v p -> q)  ⊢ CNF "  # True
+    formula16 = "0 - ~p ^ (~q v (p ^q))  ⊢ DNF "  # False
 
-    pv.input_an_argument(formula7)
+    formula20 = "0 - ~p -> q  ⊢ CNF"
+    formula21 =  "0 - ∼(q ∨ r) ⊢ DNF"
+    formula22 = "0 - p ^ (p ^ r) ⊢ CNF"
+    formula23 = "0 - p ^ (p v r) ^ q ⊢ CNF"
+    formula24 = "0 - p ^ (p v (r ^ s)) ^ (q v s) ⊢ CNF"
+    formula25 = "0 - p v (p ^ r) v ~(q ^ s) ⊢ DNF"
+    formula26 = "0 - ~p ∨ ~q ⊢ CNF"
+    formula27 = "0 - ~p v q  ⊢ CNF "
+
+
+
+    pv.input_an_argument(formula26)
     nformula = pv.remove_rule_reference(pv.argument_premisses[0])
 
     # ind_form_list = fms.index_form(0, nformula)
-    print(f"premiss: {nformula}")
+    # print(f"premiss: {nformula}")
     # print(f"ind_form_list: {ind_form_list}")
 
     r = tls.is_cnf(nformula)
-    # r = tls.is_mult_disj(nformula)
-    print(f"r: {r}")
+    if r:
+        print(f"nformula: {nformula} is a CNF")
+
+    r = tls.is_dnf(nformula)
+    if r:
+        print(f"nformula: {nformula} is a DNF")
 
     # l = tls.get_disjunct_list(nformula)
     # for i in l:
     #     print(f"i: {i}")
+
+    # formulas = [formula0, formula1, formula2, formula3, formula4,
+    #             formula5, formula6, formula7, formula8, formula9,
+    #             formula10, formula11, formula12, formula13, formula14, formula15]
+    #
+    # for f in formulas:
+    #     pv.input_an_argument(f)
+    #     nformula = pv.remove_rule_reference(pv.argument_premisses[0])
+    #     print(f"premiss: {nformula}")
+    #
+    #     r_cnf = tls.is_cnf(nformula)
+    #     print(f'The formula: {nformula} is a CNF: {r_cnf}')
+    #     r_dnf = tls.is_dnf(nformula)
+    #     print(f'The formula: {nformula} is a DNF: {r_dnf}')
+
+    # formula = "isto é um teste legal"
+    # pv.replace_by_newform(formula, "2+5*4", 7, 8)

@@ -97,6 +97,8 @@ def is_wff(formula):  # formula is in string format
     else:
         # print(f'new_formula: {new_formula}')
         r2, error_message, prep_formula = fms.generate_represent(new_formula)
+        # print(f'r2: {r2} - error_message: {error_message} ')
+        # print(f'prep_formula: {prep_formula}')
         if not r2:
             return r2, error_message, ""
         else:

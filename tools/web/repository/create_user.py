@@ -10,11 +10,11 @@ def create_user():
 
     with DBConnectionHandler() as db:
         try:
-            password  = hashlib.sha256("adminrogerioD!".encode()).hexdigest()
+            password  = hashlib.sha256("azsxdcfvgb".encode()).hexdigest()
             user_model = UserModel(
                 id = str(uuid4()),
                 username = "teste",
-                email = "rogeriosalvini@ufg.br",
+                email = "teste@teste.com",
                 created_at = datetime.datetime.now(),
                 updated_at = datetime.datetime.now(),
                 password = password,
