@@ -1,11 +1,8 @@
 from typing import IO, List
 from src._shared.errors.bad_request import BadRequestError
-from src.problems.domain.validator.validator_list import validate_list
 from src.problems.domain.value_object.file import File
-from web.sdk.mrplato.input_validation import load_list_of_problems
-
-
 import re
+
 
 class ListProblem:
     __list: List[str]
@@ -21,14 +18,21 @@ class ListProblem:
             allowed_extensions
         ))):
             raise BadRequestError("Requires .txt or .arg file; other type not is supported.")
-        lines_limit = 500
+        lines_limit = 200
+
         # array = [line.strip() for line in list.get_file().readlines()]
 
-        array = validate_list(list=list)
+        array = []
+        for line in list.get_file().readlines():
+            if line.strip() and not line.startswith('#') and not line.startswith('@'):
+                argumento = re.sub(r'\s+', ' ', line.strip())
+                array.append(argumento)
+
 
         if len(array) > lines_limit:
                 raise BadRequestError(f"Only {lines_limit} problems per file are allowed")
         
+
         self.__list = array
 
     def get_list(self):
