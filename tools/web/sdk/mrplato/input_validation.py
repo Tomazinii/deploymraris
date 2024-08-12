@@ -4,9 +4,7 @@ Created on Tue Nov 07 08:19: 2023
 @author: cedric
 """
 
-import copy
-import os
-from itertools import chain, combinations
+
 
 from web.sdk.mrplato.resources import tools_file as tools
 from web.sdk.mrplato.resources import forms as fms
@@ -106,27 +104,28 @@ def is_wff(formula):  # formula is in string format
 
 
 # -----------------------------------------------------------------------------
-def load_list_of_problems(file):
-    tokens = tokenize.tokenize(file.readline)
-
+def load_list_of_problems(lp_name):
+    tokens = tokenize.tokenize(lp_name.readline)
     l_strings = []
     try :
         for token in tokens:
             # print(f"token: {token}")
             l_strings.append((token.type,token.string))
     except:
-        msg = "Error in processing file."
+        # msg = "Error in processing file at: "+token.line
+        msg = "Wrong number of parenthesis at: "+token.line
+        print(f"msg: {msg}")
         return False, [msg], [], ""
 
     r, l_msgs, l_args, author = check_input(l_strings)
+    # for a in l_args:
+    #     print(f"arg: {a}")
 
     if r:
-        print(f"All arguments are WELL FORMED FORMULAS!")
+        msg = f"All arguments are WELL FORMED FORMULAS!"
         return r, l_msgs, l_args, author
     else:
         print(f"Not all argument IS A WELL FORMED FORMULA!")
-        for m in l_msgs:
-            print(f"ERROR: {m}")
         return r, l_msgs, l_args, author
 
 # -----------------------------------------------------------------------------
@@ -150,7 +149,8 @@ def check_input(l_strings):
 
     ind = 0
     for a in l_args:
-        print(f"Checking line[{ind}]: {a}")
+        msg = f"Checking line[{ind}]: {a}"
+        print(msg)
         ind = ind+1
 
         r0, msg0, l_premisses, conclusion = get_l_premisses_conclusion(a)
@@ -167,7 +167,8 @@ def check_input(l_strings):
                 l_msgs.append(msg1)
                 break
             else:
-                print(f"Line[{ind}] is a WELL FORMED FORMULA.")
+                msg = f"Line[{ind}] is a WELL FORMED FORMULA."
+                print(msg)
 
     return r1 , l_msgs, l_args, author
 

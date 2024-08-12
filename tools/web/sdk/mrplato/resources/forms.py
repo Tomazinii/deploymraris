@@ -819,6 +819,7 @@ def gen_reprForm2( oper, opnd1,opnd2):
 
 # -----------------------------------------------------------------------------
 def gen_reprFof(form):
+    # print(f"form: {form}")
 
     if form[0] in GlobalConstants.list_of_quants:  # ['∀', '∃']
         quant_list = []
@@ -950,11 +951,9 @@ def handle_precedence_of_operators(form):
 # print(f'form2: {form2} - type: {type(form2)}')
 # print(f'is?: {form1 == form2}')
 
-
-
-l = ['p', '∧', 'q', 'a', 'x' ]
-r = generate_represent(l)
-print(r)
+# l = ['p', '∧', 'q', 'a', 'x' ]
+# r = generate_represent(l)
+# print(r)
 # -----------------------------------------------------------------------------
 def generate_list_represent(listOfForms):
     '''

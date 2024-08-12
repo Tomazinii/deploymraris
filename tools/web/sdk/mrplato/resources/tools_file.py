@@ -15,7 +15,6 @@ from web.sdk.mrplato.resources import predRules as pred
 from web.sdk.mrplato.resources import deducInfer as ddi
 
 
-
 # -----------------------------------------------------------------------------
 class Prover():
     """
@@ -315,17 +314,18 @@ class Prover():
             else:
                 tools = UsefullTools()
                 r, error_message, prep_formula = tools.remove_parenthesis(formula)
+                # print(f'ro : {r}')
+                # print(f'error_message : {error_message}')
                 if not r:
                     return False, error_message
                 else:
                     r, error_message, rep_formula = fms.generate_represent(prep_formula)
+                    # print(f'r1 : {r}')
+                    # print(f'error_message : {error_message}')
                     if not r:
                         return False, error_message
                     else:
-                        # self.ids.in_arg_label.text = self.ids.in_arg_label.text + '\n' + \
-                        #                              fms.GlobalConstants.c_ass + ' ' + str(formula)
                         self.argument_conclusion = rep_formula
-                        # self.ids.in_arg.ids.in_prem_or_concl.text = 'Input a Premiss or Conclusion'
                         # print(f'self.argument_conclusion: {self.argument_conclusion}')
 
                         self.conclusion = self.argument_conclusion
@@ -667,7 +667,10 @@ class Prover():
 
         tools = UsefullTools()
 
-        user_resp, sub_formula, total_ou_partial = user_response
+        user_resp, sub_formula, total_or_partial = user_response
+        # print(f'user_resp::::: {user_resp}')
+        # print(f'sub_formula::::: {sub_formula}')
+        # print(f'total_or_partial::::: {total_or_partial}')
 
         selected_proof_line = proof_line_list[selected_proof_line_indexes[0]]
         sel_lines = self.remove_rule_references([selected_proof_line])
@@ -678,14 +681,23 @@ class Prover():
         options = tools.get_options(ind_form_list)
         # print(f'options::::: {options}')
 
-        if (total_ou_partial == "partial") and (sub_formula is None): # Any part of the formula were selected
+
+        if ((rule.getNick() in ["COMPL_c_rl","COMPL_d_rl","IDENT_cc_rl","IDENT_dt_rl"])
+              and (user_resp == 0)): # The user must inform a wff formula
             user_input = 1
+            return True, '', user_input, (["Enter a wff formula, please."], [options])
+        if (total_or_partial == "partial") and (user_resp < 2): # Any part of the formula were selected
+            # print("proving partial")
+            user_input = 2
             return True, '', user_input, (["Select a part of the formula, please."], [options])
-        else:
-            original_form = options[0]
-            r, msg, user_input, new_line = self.apply_equivalence_rule2(rule, original_form,
-                                                                        line, user_response)
-            return r, msg, user_input, new_line
+
+        # print("%%%%%%%%%%%%deveria ser aqui")
+        original_form = options[0]
+        r, msg, user_input, new_line = self.apply_equivalence_rule2(rule, original_form,
+                                                                    line, user_response)
+
+        return r, msg, user_input, new_line
+
 
     # -----------------------------------------------------------------------------
     def apply_equivalence_rule2(self, rule, original_form, line, user_response):
@@ -698,17 +710,66 @@ class Prover():
         :return: True/False, an error message
         '''
 
-        user_resp, sub_formula, total_or_partial = user_response
+
+        user_resp, user_selections , total_or_partial = user_response
+
+        # print(f"user_selections: {user_selections} - type: {type(user_selections)} ")
+
 
         if total_or_partial == "total":
-            r, msg, new_line = self.apply_equiv_rule(rule, line)
-            user_input = 0
-            return r, msg, user_input, new_line
-        else: #total_or_partial == "partial"
-            r, msg, new_line = self.apply_partial_eq(rule, original_form, sub_formula)
-            # print(f"r: {r} - msg: {msg} - new_line: {new_line}")
-            user_input = 0
-            return r, msg, user_input, new_line
+            if user_selections is not None:
+                (sub_formula, new_form) = user_selections
+                r1, msg1, prep_new_form = self.generate_true_or_false_equivalence(rule, line, new_form)
+                # print(f'msg1::::: {msg1}')
+                # print(f'prep_new_form::::: {prep_new_form}')
+                user_input = 0
+                return r1, msg1, user_input, prep_new_form
+            else:
+                r2, msg2, new_line = self.apply_equiv_rule(rule, line)
+                user_input = 0
+                return r2, msg2, user_input, new_line
+        else:
+            (sub_formula, new_form) = user_selections
+            if new_form is not None:
+                r2, msg2, new_line = self.apply_partial_eq(rule, original_form, sub_formula, new_form)
+                # print(f"r: {r2} - msg: {msg2} - new_line: {new_line}")
+                user_input = 0
+                return r2, msg2, user_input, new_line
+            else:
+                r2, msg2, new_line = self.apply_partial_eq2(rule, original_form, sub_formula, new_form)
+                # print(f"r: {r} - msg: {msg} - new_line: {new_line}")
+                user_input = 0
+                return r2, msg2, user_input, new_line
+
+        # print(f'>>>>>>>>>>>>>>>>>>>user_resp::::: {user_resp}')
+        # print(f'line::::: {line}')
+        # print(f'sub_formula::::: {sub_formula}')
+        # print(f'new_form::::: {new_form}')
+        # print(f'total_or_partial::::: {total_or_partial}')
+        # print(f'original_form::::: {original_form}')
+###########################################################
+        # if new_form is not None:
+        #     if total_or_partial == "total":
+        #         r1, msg1, prep_new_form = self.generate_true_or_false_equivalence(rule, line, new_form)
+        #         # print(f'msg1::::: {msg1}')
+        #         # print(f'prep_new_form::::: {prep_new_form}')
+        #         user_input = 0
+        #         return r1, msg1, user_input, prep_new_form
+        #     else: # partial
+        #         r2, msg2, new_line = self.apply_partial_eq(rule, original_form, sub_formula ,new_form)
+        #         # print(f"r: {r2} - msg: {msg2} - new_line: {new_line}")
+        #         user_input = 0
+        #         return r2, msg2, user_input, new_line
+        # else:
+        #     if total_or_partial == "total":
+        #         r2, msg2, new_line = self.apply_equiv_rule(rule, line)
+        #         user_input = 0
+        #         return r2, msg2, user_input, new_line
+        #     else:  # partial
+        #         r2, msg2, new_line = self.apply_partial_eq2(rule, original_form, sub_formula, new_form)
+        #         # print(f"r: {r} - msg: {msg} - new_line: {new_line}")
+        #         user_input = 0
+        #         return r2, msg2, user_input, new_line
 
 
     # -----------------------------------------------------------------------------
@@ -730,10 +791,45 @@ class Prover():
 
         return r, msg, new_line
 
+    # -----------------------------------------------------------------------------
+    def generate_true_or_false_equivalence(self, rule, line, new_form):
+
+        # print(f"******line: {line}")
+        # print(f"new_form: {new_form}")
+        #
+        nick = rule.getNick()
+        # if nick not in ["COMPL_c_rl","COMPL_d_rl","IDENT_cc_rl","IDENT_dt_rl"]:
+        #     return True, "", ""
+
+        tls = UsefullTools()
+        r, msg, prepared_new_formula = tls.prepare_new_formula(new_form)
+        # print(f"r: {r}")
+        # print(f"prepared_new_formula: {prepared_new_formula}")
+        if not r:
+            return r, msg, ""
+        else:
+            r = True
+            msg = ""
+            if (line.getOpnd1() == fms.GlobalConstants.true) and (nick == "COMPL_c_rl"):
+                compl = fms.Form1(fms.GlobalConstants.c_not, prepared_new_formula)
+                new_line = fms.Form2(prepared_new_formula, fms.GlobalConstants.c_or, compl)
+            elif (line.getOpnd1() == fms.GlobalConstants.false) and (nick == "COMPL_d_rl"):
+                compl = fms.Form1(fms.GlobalConstants.c_not, prepared_new_formula)
+                new_line = fms.Form2(prepared_new_formula, fms.GlobalConstants.c_and, compl)
+            elif (line.getOpnd1() == fms.GlobalConstants.false) and (nick == "IDENT_cc_rl"):
+                new_line = fms.Form2(prepared_new_formula, fms.GlobalConstants.c_and, fms.Form0(fms.GlobalConstants.false))
+            elif (line.getOpnd1() == fms.GlobalConstants.true) and (nick == "IDENT_dt_rl"):
+                new_line = fms.Form2(prepared_new_formula, fms.GlobalConstants.c_or,  fms.Form0(fms.GlobalConstants.true))
+            else:
+                r = False
+                msg = f"The rule <{nick}> can not be applied here."
+                new_line = ""
+
+        return r, msg, new_line
 
 
     # -----------------------------------------------------------------------------
-    def apply_partial_eq(self, rule, original_form, selection):
+    def apply_partial_eq(self, rule, original_form, selection, new_form):
         '''
                         Apply the selected rule to a part of the proof line selected
                         :param rule: the selected rule
@@ -743,6 +839,78 @@ class Prover():
                             the result of application of the rule to a part of the line
                             must replace the original part of the line
                         '''
+
+
+        # print(f'original_form: {original_form}')
+        # print(f'selection: {selection}')
+
+        original_form = original_form.split(' - AT POS ')[0]
+        sform_original, form_list, begin, end = self.get_partial_formula(selection)
+        # print(f'begin: {begin}')
+        # print(f'end: {end}')
+        # print(f'form_list: {form_list}')
+
+        tools = UsefullTools()
+        r, error_message, prep_formula = tools.remove_parenthesis(form_list)
+        if not r:
+            return r, error_message, None
+        else:
+            # print(f'prep_formula: {prep_formula}')
+            r, error_message, rep_formula = fms.generate_represent(prep_formula)
+            # print(f'rep_formula: {rep_formula} - type: {type(rep_formula)}')
+            if not r:
+                return r, error_message, None
+            else:
+                if new_form is not None:
+                    ###############################################################################
+                    r1, msg1, prep_new_form = self.generate_true_or_false_equivalence(rule, rep_formula, new_form)
+                    # print(f'msg1::::: {msg1}')
+                    # print(f'prep_new_form::::: {prep_new_form}')
+                    s_newForm = str(prep_new_form)
+                else:
+                    r, error_message, new_form = equiv.applyEquivRule(rule, [rep_formula])
+                    # print(f'newForm: {new_form} - type: {type(new_form)}')
+
+                    if not r:
+                        return r, error_message, None
+                    else:
+                        s_newForm = str(new_form)
+
+                if len(s_newForm) > 2:
+                    if original_form[begin - 1] == '(' and original_form[end + 1] == ')':
+                        pass
+                    else:
+                        s_newForm = "(" + s_newForm + ")"
+
+                cnt = fms.GlobalConstants()
+                # print(f's_newForm: {s_newForm} - type: {type(s_newForm)} - len: {len(s_newForm)}')
+                s_newForm = s_newForm.replace(cnt.c_not + cnt.c_not, cnt.c_not + ' ' + cnt.c_not)
+                # print(f's_newForm: {s_newForm} - type: {type(s_newForm)}')
+
+
+                # print(f'original_form: {original_form} - type: {type(original_form)}')
+                # print(f'sform_original: {sform_original} - len(sform_original): {len(sform_original)}')
+                # new_text = original_form.replace(sform_original, s_newForm,1)
+                new_text = self.replace_by_newform(original_form, s_newForm,begin,end)
+                # print(f'new_text: {new_text}')
+                r, msg, prep_new_text = tools.prepare_new_formula(new_text)
+                # print(f'prep_new_text: {prep_new_text}')
+                return r, msg, prep_new_text
+
+
+
+
+    # -----------------------------------------------------------------------------
+    def apply_partial_eq2(self, rule, original_form, selection, n_form):
+        '''
+          Apply the selected rule to a part of the proof line selected
+                                   :param rule: the selected rule
+                                   :param original_form: the original proof line selected
+                                   :param selection: the sub_formula of the original proof line
+                                   :return: True/False, an error message and the new proof line generated
+                                       the result of application of the rule to a part of the line
+                                       must replace the original part of the line
+                                   '''
 
         original_form = original_form.split(' - AT POS ')[0]
         sform_original, form_list, begin, end = self.get_partial_formula(selection)
@@ -782,11 +950,14 @@ class Prover():
                     # print(f'original_form: {original_form} - type: {type(original_form)}')
                     # print(f'sform_original: {sform_original} - len(sform_original): {len(sform_original)}')
                     # new_text = original_form.replace(sform_original, s_newForm,1)
-                    new_text = self.replace_by_newform(original_form, s_newForm,begin,end)
+                    new_text = self.replace_by_newform(original_form, s_newForm, begin, end)
                     # print(f'new_text: {new_text}')
                     r, msg, prep_new_text = tools.prepare_new_formula(new_text)
                     # print(f'prep_new_text: {prep_new_text}')
                     return r, msg, prep_new_text
+
+
+
 
     # -----------------------------------------------------------------------------
     def replace_by_newform(self, original_form, s_newForm, begin, end):
@@ -956,15 +1127,20 @@ class Prover():
 
         # print(f'begin: {begin}')
         # print(f'end: {end}')
+        # print(f'>>>>sform0: {sform} - tyoe: {type(sform)}')
 
         tools = UsefullTools()
         sform = tools.insert_spaces(sform)
-        # print(f'sform: {sform}')
+        # print(f'>>>>sform: {sform}')
 
-        l_sform = sform.split()  # Transform into a list without spaces
+        cnt = fms.GlobalConstants()
+        s_newForm = sform.replace(cnt.c_not + cnt.c_not, cnt.c_not + ' ' + cnt.c_not)
+        # print(f's_newForm: {s_newForm} - type: {type(s_newForm)}')
+
+
+        l_sform = s_newForm.split()  # Transform into a list without spaces
         l_sform = list(filter((',').__ne__, l_sform))  # remove all occurrences of ',' from the input_string
         # print(f'l_sform: {l_sform}')
-
         return sform_original, l_sform, begin, end
 
 
@@ -1391,6 +1567,7 @@ class Prover():
         tls = UsefullTools()
 
         conclusion = self.argument_conclusion
+
         if conclusion == fms.GlobalConstants.cnf:
             r = tls.is_cnf(new_line)
         elif conclusion == fms.GlobalConstants.dnf:
@@ -1398,7 +1575,9 @@ class Prover():
         else:
             # print(f"new_line: {new_line} - type: {type(new_line)}")
             # print(f"conclusion: {conclusion} - type: {type(conclusion)}")
+
             r = new_line == conclusion
+            # print(f"r: {r} ")
         if (r):
             if len(self.list_of_hypothesis) != 0:
                 error_message = 'You got to the conclusion, \n\n' \
@@ -1434,6 +1613,7 @@ class UsefullTools():
     def insert_spaces(self, input_string):
 
         cnt = fms.GlobalConstants()
+        # print(f"input_stringA: {input_string}")
 
         for c in cnt.list_of_aprops:
             input_string = input_string.replace(c, ' ' + c)  # Insert a space before a functor symbol
@@ -1441,6 +1621,13 @@ class UsefullTools():
         input_string = input_string.replace(cnt.fa, ' ' + cnt.fa + ' ')  # Insert a space before and after 'fa'
         input_string = input_string.replace(cnt.ex, ' ' + cnt.ex + ' ')  # Insert a space before and after 'ex'
         input_string = input_string.replace(cnt.c_not, ' ' + cnt.c_not + ' ')  # Insert a space before and after 'not'
+        input_string = input_string.replace('fa', ' ' + cnt.fa + ' ')  # Insert a space before and after 'fa'
+        input_string = input_string.replace('ex', ' ' + cnt.ex + ' ')  # Insert a space before and after 'ex'
+        input_string = input_string.replace('_x', ' x ')  # Remove prefix '_' from predicates variables: _x => x
+        input_string = input_string.replace('_y', ' y ')  # Remove prefix '_' from predicates variables: _y => y
+        input_string = input_string.replace('_z', ' z ')  # Remove prefix '_' from predicates variables: _z => z
+        input_string = input_string.replace('_w', ' w ')  # Remove prefix '_' from predicates variables: _w => w
+        input_string = input_string.replace('~', ' ' + cnt.c_not + ' ')  # Insert a space before and after 'not'
         input_string = input_string.replace('&', ' ' + cnt.c_and + ' ')  # Insert a space before and after ',' (AND)
         input_string = input_string.replace('^', ' ' + cnt.c_and + ' ')  # Insert a space before and after ',' (AND)
         input_string = input_string.replace('|', ' ' + cnt.c_or + ' ')  # Insert a space before and after '|' (OR)
@@ -1461,6 +1648,8 @@ class UsefullTools():
         input_string = input_string.replace('DNF', cnt.dnf)  # DNF
         input_string = input_string.replace('ICS', cnt.ics)  # Inconsistent premisses
 
+
+        # print(f"input_stringD: {input_string}")
         return input_string
 
     # -----------------------------------------------------------------------------
@@ -1953,24 +2142,29 @@ if __name__ == '__main__':
     formula24 = "0 - p ^ (p v (r ^ s)) ^ (q v s) ⊢ CNF"
     formula25 = "0 - p v (p ^ r) v ~(q ^ s) ⊢ DNF"
     formula26 = "0 - ~p ∨ ~q ⊢ CNF"
-    formula27 = "0 - ~p v q  ⊢ CNF "
+    formula27 = "0 - ~p v q  ⊢ CNF"
+    formula28 = "0 - p v (~p ^(q ^ r))  ⊢ CNF"
+
+    # s = "1 - ~fa_xp(x,a) ⊢ ex_x~p(x,a)"
+    # s2 = tls.insert_spaces(s)
+    # print(f" s: {s2}")
 
 
 
-    pv.input_an_argument(formula26)
-    nformula = pv.remove_rule_reference(pv.argument_premisses[0])
+    # pv.input_an_argument(formula28)
+    # nformula = pv.remove_rule_reference(pv.argument_premisses[0])
 
     # ind_form_list = fms.index_form(0, nformula)
     # print(f"premiss: {nformula}")
     # print(f"ind_form_list: {ind_form_list}")
 
-    r = tls.is_cnf(nformula)
-    if r:
-        print(f"nformula: {nformula} is a CNF")
-
-    r = tls.is_dnf(nformula)
-    if r:
-        print(f"nformula: {nformula} is a DNF")
+    # r = tls.is_cnf(nformula)
+    # if r:
+    #     print(f"nformula: {nformula} is a CNF")
+    #
+    # r = tls.is_dnf(nformula)
+    # if r:
+    #     print(f"nformula: {nformula} is a DNF")
 
     # l = tls.get_disjunct_list(nformula)
     # for i in l:
